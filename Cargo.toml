@@ -1,0 +1,9 @@
+[package]
+name = "rust-battleship"
+version = "0.1.0"
+authors = ["Thomas Templeton <hi@thomasisbored.net>"]
+
+[dependencies]
+piston_window = "0.50"
+rand = "0.3"
+
