@@ -318,9 +318,10 @@ impl App {
         // be drawn by the window renderer.
         if self.state == 0 {
             if let Some(grid_pos) = self.mouse_cursor_grid_position() {
-                self.ship_temp_pos = self.get_ship_position(
+                self.ship_temp_pos = self.players[self.turn as usize].get_ship_position(
                     grid_pos,
-                    self.players[self.turn as usize].ships.len() + 2
+                    self.ship_temp_dir,
+                    self.players[self.turn as usize].ships.len() as u8 + 2
                 );
             }
         }
@@ -343,20 +344,6 @@ impl App {
         }
 
         position
-    }
-
-    /// Returns a ship's grid positions, given its head position and length.
-    fn get_ship_position(&self, head_pos: [u8; 2], length: usize) -> Vec<[u8; 2]> {
-        let mut ship = vec![head_pos];
-        for pos in 1..length {
-            match self.ship_temp_dir {
-                0 => ship.push([head_pos[0] + pos as u8, head_pos[1]]),
-                1 => ship.push([head_pos[0], head_pos[1] + pos as u8]),
-                _ => {}
-            }
-        }
-
-        ship
     }
 }
 

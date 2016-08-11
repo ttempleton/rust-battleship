@@ -49,18 +49,31 @@ impl Player {
 
         // RNG a position and direction, then make sure it's valid.
         while !valid {
-            ship.clear();
             x = rng.gen_range(0, 10);
             y = rng.gen_range(0, 10);
             direction = rng.gen_range(0, 2);
-            for pos in 0..length {
-                match direction {
-                    0 => ship.push([x + pos, y]),
-                    1 => ship.push([x, y + pos]),
-                    _ => panic!("Invalid ship direction"),
-                }
-            }
+            ship = self.get_ship_position([x, y], direction, length);
             valid = self.valid_ship_position(&ship);
+        }
+
+        ship
+    }
+
+    /// Returns a ship's grid positions, given its head position, direction and
+    /// length.
+    pub fn get_ship_position(
+        &self,
+        head: [u8; 2],
+        direction: u8,
+        length: u8
+    ) -> Vec<[u8; 2]> {
+        let mut ship = vec![head];
+        for pos in 1..length {
+            match direction {
+                0 => ship.push([head[0] + pos as u8, head[1]]),
+                1 => ship.push([head[0], head[1] + pos as u8]),
+                _ => {}
+            }
         }
 
         ship
