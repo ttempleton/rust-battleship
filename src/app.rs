@@ -12,10 +12,11 @@ pub struct App {
     pub turn_active: bool,
     pub game_over: bool,
     pub winner: Option<u8>,
-    pub interval: f64,
+    pub turn_end_timer: f64,
+    pub cpu_turn_timer: f64,
     pub grid_area: [u32; 4],
     pub window_size: [u32; 2],
-    cursor: [f64; 2],
+    mouse_cursor: [f64; 2],
     pub ship_temp_pos: Vec<[u8; 2]>,
     ship_temp_dir: u8,
 }
@@ -46,10 +47,11 @@ impl App {
             turn_active: true,
             game_over: false,
             winner: None,
-            interval: 0.0,
+            turn_end_timer: 0.0,
+            cpu_turn_timer: 0.0,
             grid_area: grid_area,
             window_size: window_size,
-            cursor: [0.0; 2],
+            mouse_cursor: [0.0; 2],
             ship_temp_pos: vec![[0, 0], [1, 0]],
             ship_temp_dir: 0,
         }
@@ -73,8 +75,8 @@ impl App {
             if !self.turn_active && !self.game_over {
 
                 // Continue/end the end-of-turn delay.
-                if self.interval < 1.5 {
-                    self.interval += u.dt;
+                if self.turn_end_timer < 1.5 {
+                    self.turn_end_timer += u.dt;
                 } else {
                     if self.state != 2 {
                         self.switch_turn();
@@ -85,11 +87,11 @@ impl App {
                 }
             }
 
-            // Continue/end the one second delay when the CPU is taking its turn.
+            // Continue/end the delay when CPU players take their turn.
             if self.turn_active && self.players[self.turn as usize].is_cpu {
-                self.interval += u.dt;
-                if self.interval >= 1.0 {
-                    self.interval = 0.0;
+                self.cpu_turn_timer += u.dt;
+                if self.cpu_turn_timer >= 1.0 {
+                    self.cpu_turn_timer = 0.0;
                     self.cpu_select_space();
                 }
             }
@@ -250,7 +252,7 @@ impl App {
     fn switch_turn(&mut self) {
         self.turn = self.not_turn() as u8;
         self.turn_active = true;
-        self.interval = 0.0;
+        self.turn_end_timer = 0.0;
     }
 
     /// Processes all left mouse clicks according to the current program state.
@@ -312,17 +314,26 @@ impl App {
 
     /// Records the last known mouse cursor position.
     pub fn mouse_cursor_movement(&mut self, c: &[f64; 2]) {
-        self.cursor = *c;
+        self.mouse_cursor = *c;
 
-        // During ship placement, set the temporary ship position, so it can
-        // be drawn by the window renderer.
-        if self.state == 0 {
-            if let Some(grid_pos) = self.mouse_cursor_grid_position() {
-                self.ship_temp_pos = self.players[self.turn as usize].get_ship_position(
+        if let Some(grid_pos) = self.mouse_cursor_grid_position() {
+            let ref mut player = self.players[self.turn as usize];
+
+            // During ship placement, set the temporary ship position so it can
+            // be drawn by the window renderer.
+            if self.state == 0 {
+                self.ship_temp_pos = player.get_ship_position(
                     grid_pos,
                     self.ship_temp_dir,
-                    self.players[self.turn as usize].ships.len() as u8 + 2
+                    player.ships.len() as u8 + 2
                 );
+            }
+
+            // State 1: set the player's grid cursor.
+            if self.state == 1 {
+                if self.turn_end_timer == 0.0 && !player.is_cpu {
+                    player.grid_cursor = grid_pos;
+                }
             }
         }
     }
@@ -330,14 +341,14 @@ impl App {
     /// Returns the grid coordinates of the mouse cursor position.
     fn mouse_cursor_grid_position(&self) -> Option<[u8; 2]> {
         let position: Option<[u8; 2]>;
-        if self.cursor[0] >= self.grid_area[0] as f64
-            && self.cursor[1] >= self.grid_area[1] as f64
-            && self.cursor[0] < (self.grid_area[0] + self.grid_area[2]) as f64
-            && self.cursor[1] < (self.grid_area[1] + self.grid_area[3]) as f64
+        if self.mouse_cursor[0] >= self.grid_area[0] as f64
+            && self.mouse_cursor[1] >= self.grid_area[1] as f64
+            && self.mouse_cursor[0] < (self.grid_area[0] + self.grid_area[2]) as f64
+            && self.mouse_cursor[1] < (self.grid_area[1] + self.grid_area[3]) as f64
         {
             position = Some([
-                ((self.cursor[0] - self.grid_area[0] as f64) / self.settings.space_size as f64) as u8,
-                ((self.cursor[1] - self.grid_area[1] as f64) / self.settings.space_size as f64) as u8,
+                ((self.mouse_cursor[0] - self.grid_area[0] as f64) / self.settings.space_size as f64) as u8,
+                ((self.mouse_cursor[1] - self.grid_area[1] as f64) / self.settings.space_size as f64) as u8,
             ]);
         } else {
             position = None;

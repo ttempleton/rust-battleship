@@ -61,6 +61,13 @@ fn main() {
         &TextureSettings::new(),
     ).unwrap());
 
+    let grid_cursor_texture = Texture::from_path(
+        &mut window.factory,
+        images_dir.join("grid-cursor.png"),
+        Flip::None,
+        &TextureSettings::new(),
+    ).unwrap();
+
     let mut ship_textures = vec![];
     for ship_size in 2..6 {
         let image_file = format!("ship-{}.png", ship_size);
@@ -173,6 +180,15 @@ fn main() {
                     }
                 }
 
+                // During the game, show the player's grid cursor.
+                if app.state == 1 && app.turn_end_timer == 0.0 && !app.players[app.turn as usize].is_cpu {
+                    let transform = c.transform.trans(
+                        (app.settings.space_size * app.players[app.turn as usize].grid_cursor[0] as u32 + app.grid_area[0]) as f64,
+                        (app.settings.space_size * app.players[app.turn as usize].grid_cursor[1] as u32 + app.grid_area[1]) as f64,
+                    );
+                    image(&grid_cursor_texture, transform, g);
+                }
+
                 // Current player text image
                 if !app.game_over {
                     let player_text_size = player_text[app.turn as usize].get_size();
@@ -185,11 +201,11 @@ fn main() {
 
                 // During turn transitions / game over, cover the window with
                 // a black rectangle of increasing opacity.
-                if !app.turn_active && app.interval >= 0.75 {
+                if !app.turn_active && app.turn_end_timer >= 0.75 {
                     let alpha = if app.state != 2 {
-                        (app.interval as f32 - 0.75) / 0.75
+                        (app.turn_end_timer as f32 - 0.75) / 0.75
                     } else {
-                        (app.interval as f32 - 0.75) / 1.125
+                        (app.turn_end_timer as f32 - 0.75) / 1.125
                     };
                     rectangle(
                         [0.0, 0.0, 0.0, alpha],

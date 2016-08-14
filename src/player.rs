@@ -4,6 +4,7 @@ pub struct Player {
     pub is_cpu: bool,
     pub spaces: Vec<Space>,
     pub ships: Vec<Ship>,
+    pub grid_cursor: [u8; 2],
 }
 
 impl Player {
@@ -24,6 +25,7 @@ impl Player {
             is_cpu: is_cpu,
             spaces: spaces,
             ships: vec![],
+            grid_cursor: [0, 0],
         }
     }
 
