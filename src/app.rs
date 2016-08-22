@@ -92,7 +92,8 @@ impl App {
                 self.cpu_turn_timer += u.dt;
                 if self.cpu_turn_timer >= 1.0 {
                     self.cpu_turn_timer = 0.0;
-                    self.cpu_select_space();
+                    let cpu_space = self.cpu_select_space();
+                    self.select_space(cpu_space[0], cpu_space[1]);
                 }
             }
         }
@@ -148,7 +149,7 @@ impl App {
     }
 
     /// Uses RNG to select a space for CPU players.
-    pub fn cpu_select_space(&mut self) {
+    fn cpu_select_space(&mut self) -> [u8; 2] {
         let mut rng = thread_rng();
         let mut first_hit = None;
         let mut select = vec![];
@@ -163,73 +164,78 @@ impl App {
         ];
         rng.shuffle(&mut directions);
 
-        {
-            let ref opponent = self.players[self.not_turn()];
-            for space in &opponent.spaces {
-                if space.state == 2 {
-                    for ship in &opponent.ships {
+        let ref opponent = self.players[self.not_turn()];
 
-                        // Make sure this hit space belongs to an unsunk ship.
-                        if ship.state && ship.position.contains(&space.position) {
-                            if first_hit.is_none() {
-                                first_hit = Some(space.position);
-                            }
+        for space in &opponent.spaces {
+            if space.state == 2 {
 
-                            // Check if this space forms part of a line of hit
-                            // spaces.  If it does, and the space at the end of
-                            // the line hasn't been selected yet, it's a
-                            // candidate for selection this turn.
-                            for check in &directions {
-                                let mut xc = space.position[0];
-                                let mut yc = space.position[1];
+                // Get the hit ship.
+                let mut ship: Option<&Ship> = None;
+                for s in &opponent.ships {
+                    if s.position.contains(&space.position) {
+                        ship = Some(s);
+                        break;
+                    }
+                }
 
-                                while opponent.get_space_state((xc as i32 + check[0]) as u8, (yc as i32 + check[1]) as u8) == Some(2) {
-                                    xc = (xc as i32 + check[0]) as u8;
-                                    yc = (yc as i32 + check[1]) as u8;
-                                }
+                // Make sure the hit ship hasn't been sunk.
+                if ship.unwrap().state {
+                    if first_hit.is_none() {
+                        first_hit = Some(space.position);
+                    }
 
-                                if opponent.get_space_state((xc as i32 + check[0]) as u8, (yc as i32 + check[1]) as u8) == Some(0) && (xc != space.position[0] || yc != space.position[1]) {
-                                    select.push([
-                                        (xc as i32 + check[0]) as u8,
-                                        (yc as i32 + check[1]) as u8
-                                    ]);
-                                    break;
-                                }
-                            }
+                    // Check if this space forms part of a line of hit spaces.
+                    // If it does, and the space at the end hasn't been
+                    // selected yet, it's a candidate for selection this turn.
+                    for check in &directions {
+                        let mut xc = space.position[0];
+                        let mut yc = space.position[1];
+
+                        while opponent.get_space_state((xc as i32 + check[0]) as u8, (yc as i32 + check[1]) as u8) == Some(2) {
+                            xc = (xc as i32 + check[0]) as u8;
+                            yc = (yc as i32 + check[1]) as u8;
+                        }
+
+                        if opponent.get_space_state((xc as i32 + check[0]) as u8, (yc as i32 + check[1]) as u8) == Some(0) && (xc != space.position[0] || yc != space.position[1]) {
+                            select.push([
+                                (xc as i32 + check[0]) as u8,
+                                (yc as i32 + check[1]) as u8
+                            ]);
+                            break;
                         }
                     }
                 }
             }
+        }
 
-            // If a hit space was found, but no hit spaces next to it, select
-            // a non-selected space next to it.
-            if first_hit.is_some() && select.len() == 0 {
-                let first_hit = first_hit.unwrap();
-                for check in &directions {
-                    if opponent.get_space_state((first_hit[0] as i32 + check[0]) as u8, (first_hit[1] as i32 + check[1]) as u8) == Some(0) {
-                        select.push([
-                            (first_hit[0] as i32 + check[0]) as u8,
-                            (first_hit[1] as i32 + check[1]) as u8
-                        ]);
-                        break;
-                    }
+        // If a hit space was found, but no hit spaces next to it, select a
+        // non-selected space next to it.
+        if first_hit.is_some() && select.len() == 0 {
+            let first_hit = first_hit.unwrap();
+            for check in &directions {
+                if opponent.get_space_state((first_hit[0] as i32 + check[0]) as u8, (first_hit[1] as i32 + check[1]) as u8) == Some(0) {
+                    select.push([
+                        (first_hit[0] as i32 + check[0]) as u8,
+                        (first_hit[1] as i32 + check[1]) as u8
+                    ]);
+                    break;
                 }
             }
+        }
 
-            // If no spaces were selected to check, just check any available space.
-            if select.len() == 0 {
-                let mut x: u8 = rng.gen_range(0, self.settings.width);
-                let mut y: u8 = rng.gen_range(0, self.settings.height);
-                let mut space_state = opponent.get_space_state(x, y);
+        // If no spaces were selected to check, just check any available space.
+        if select.len() == 0 {
+            let mut x: u8 = rng.gen_range(0, self.settings.width);
+            let mut y: u8 = rng.gen_range(0, self.settings.height);
+            let mut space_state = opponent.get_space_state(x, y);
 
-                while space_state.is_some() && space_state != Some(0) {
-                    x = rng.gen_range(0, self.settings.width);
-                    y = rng.gen_range(0, self.settings.height);
-                    space_state = opponent.get_space_state(x, y);
-                }
-
-                select.push([x, y]);
+            while space_state != Some(0) {
+                x = rng.gen_range(0, self.settings.width);
+                y = rng.gen_range(0, self.settings.height);
+                space_state = opponent.get_space_state(x, y);
             }
+
+            select.push([x, y]);
         }
 
         // The way the potential selections are chosen, empty spaces to the
@@ -240,7 +246,7 @@ impl App {
             rng.shuffle(&mut select);
         }
 
-        self.select_space(select[0][0], select[0][1]);
+        select[0]
     }
 
     /// Returns the player who is not currently taking their turn.
