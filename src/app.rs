@@ -120,10 +120,8 @@ impl App {
             let hit_ship = hit_ship.unwrap();
             let mut ship_state = false;
             for ship_pos in &opponent.ships[hit_ship].position {
-                if let Some(space) = opponent.spaces.iter().position(|space| &space.position == ship_pos) {
-                    if opponent.spaces[space].state == 0 {
-                        ship_state = true;
-                    }
+                if opponent.get_space_state(ship_pos[0], ship_pos[1]) == Some(0) {
+                    ship_state = true;
                 }
             }
 
@@ -281,10 +279,8 @@ impl App {
             } else if self.state == 1 && self.turn_active && !self.players[self.turn as usize].is_cpu {
 
                 // State 1: select spaces on opponent's grid.
-                if let Some(space) = self.players[self.not_turn()].spaces.iter().position(|space| space.position == grid_pos) {
-                    if self.players[self.not_turn()].spaces[space].state == 0 {
-                        self.select_space(grid_pos[0], grid_pos[1]);
-                    }
+                if self.players[self.not_turn()].get_space_state(grid_pos[0], grid_pos[1]) == Some(0) {
+                    self.select_space(grid_pos[0], grid_pos[1]);
                 }
             }
         }
