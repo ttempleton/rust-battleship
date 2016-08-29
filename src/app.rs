@@ -93,7 +93,7 @@ impl App {
                 if self.cpu_turn_timer >= 1.0 {
                     self.cpu_turn_timer = 0.0;
                     let cpu_space = self.cpu_select_space();
-                    self.select_space(cpu_space[0], cpu_space[1]);
+                    self.select_space(&cpu_space);
                 }
             }
         }
@@ -101,18 +101,18 @@ impl App {
 
     /// Selects a space, and performs related checks on the status of ships if
     /// there's a hit.
-    fn select_space(&mut self, x: u8, y: u8) {
+    fn select_space(&mut self, pos: &[u8; 2]) {
         let ref mut opponent = self.players[self.not_turn()];
         let mut space_state = 1;
         let mut hit_ship = None;
         for (i, ship) in opponent.ships.iter().enumerate() {
-            if ship.position.contains(&[x, y]) {
+            if ship.position.contains(pos) {
                 space_state = 2;
                 hit_ship = Some(i);
             }
         }
 
-        let space = opponent.spaces.iter().position(|space| space.position == [x, y]).unwrap();
+        let space = opponent.spaces.iter().position(|space| &space.position == pos).unwrap();
         opponent.spaces[space].state = space_state;
 
         if space_state == 2 {
@@ -120,7 +120,7 @@ impl App {
             let hit_ship = hit_ship.unwrap();
             let mut ship_state = false;
             for ship_pos in &opponent.ships[hit_ship].position {
-                if opponent.get_space_state(ship_pos[0], ship_pos[1]) == Some(0) {
+                if opponent.get_space_state(&ship_pos) == Some(0) {
                     ship_state = true;
                 }
             }
@@ -189,12 +189,12 @@ impl App {
                         let mut xc = space.position[0];
                         let mut yc = space.position[1];
 
-                        while opponent.get_space_state((xc as i32 + check[0]) as u8, (yc as i32 + check[1]) as u8) == Some(2) {
+                        while opponent.get_space_state(&[(xc as i32 + check[0]) as u8, (yc as i32 + check[1]) as u8]) == Some(2) {
                             xc = (xc as i32 + check[0]) as u8;
                             yc = (yc as i32 + check[1]) as u8;
                         }
 
-                        if opponent.get_space_state((xc as i32 + check[0]) as u8, (yc as i32 + check[1]) as u8) == Some(0) && (xc != space.position[0] || yc != space.position[1]) {
+                        if opponent.get_space_state(&[(xc as i32 + check[0]) as u8, (yc as i32 + check[1]) as u8]) == Some(0) && (xc != space.position[0] || yc != space.position[1]) {
                             select.push([
                                 (xc as i32 + check[0]) as u8,
                                 (yc as i32 + check[1]) as u8
@@ -211,7 +211,7 @@ impl App {
         if first_hit.is_some() && select.len() == 0 {
             let first_hit = first_hit.unwrap();
             for check in &directions {
-                if opponent.get_space_state((first_hit[0] as i32 + check[0]) as u8, (first_hit[1] as i32 + check[1]) as u8) == Some(0) {
+                if opponent.get_space_state(&[(first_hit[0] as i32 + check[0]) as u8, (first_hit[1] as i32 + check[1]) as u8]) == Some(0) {
                     select.push([
                         (first_hit[0] as i32 + check[0]) as u8,
                         (first_hit[1] as i32 + check[1]) as u8
@@ -225,12 +225,12 @@ impl App {
         if select.len() == 0 {
             let mut x: u8 = rng.gen_range(0, self.settings.width);
             let mut y: u8 = rng.gen_range(0, self.settings.height);
-            let mut space_state = opponent.get_space_state(x, y);
+            let mut space_state = opponent.get_space_state(&[x, y]);
 
             while space_state != Some(0) {
                 x = rng.gen_range(0, self.settings.width);
                 y = rng.gen_range(0, self.settings.height);
-                space_state = opponent.get_space_state(x, y);
+                space_state = opponent.get_space_state(&[x, y]);
             }
 
             select.push([x, y]);
@@ -279,8 +279,8 @@ impl App {
             } else if self.state == 1 && self.turn_active && !self.players[self.turn as usize].is_cpu {
 
                 // State 1: select spaces on opponent's grid.
-                if self.players[self.not_turn()].get_space_state(grid_pos[0], grid_pos[1]) == Some(0) {
-                    self.select_space(grid_pos[0], grid_pos[1]);
+                if self.players[self.not_turn()].get_space_state(&grid_pos) == Some(0) {
+                    self.select_space(&grid_pos);
                 }
             }
         }

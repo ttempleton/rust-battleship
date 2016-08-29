@@ -93,14 +93,14 @@ impl Player {
 
             // Make sure a ship isn't already in this space.
             if valid {
-                valid = !self.ship_is_in_space(space[0], space[1]);
+                valid = !self.ship_is_in_space(&space);
             }
 
             // CPU players are disallowed from placing ships together, because
             // it's just bad strategy.  Human players should still be allowed
             // to do what they want, though.
             if valid && self.is_cpu {
-                valid = !self.ship_is_next_to(space[0], space[1]);
+                valid = !self.ship_is_next_to(&space);
             }
         }
 
@@ -108,10 +108,10 @@ impl Player {
     }
 
     /// Checks whether a ship occupies the specified grid coordinates.
-    pub fn ship_is_in_space(&self, x: u8, y: u8) -> bool {
+    pub fn ship_is_in_space(&self, pos: &[u8; 2]) -> bool {
         let mut result = false;
         for ship in &self.ships {
-            if ship.position.contains(&[x, y]) {
+            if ship.position.contains(pos) {
                 result = true;
             }
         }
@@ -120,32 +120,34 @@ impl Player {
     }
 
     /// Checks whether there is a ship next to the specified grid coordinates.
-    fn ship_is_next_to(&self, x: u8, y: u8) -> bool {
+    fn ship_is_next_to(&self, pos: &[u8; 2]) -> bool {
         let mut result = false;
+        let x = pos[0];
+        let y = pos[1];
         // Left
         if x > 0 {
-            result = self.ship_is_in_space(x - 1, y);
+            result = self.ship_is_in_space(&[x - 1, y]);
         }
         // Right
         if x < 9 && !result {
-            result = self.ship_is_in_space(x + 1, y);
+            result = self.ship_is_in_space(&[x + 1, y]);
         }
         // Above
         if y > 0 && !result {
-            result = self.ship_is_in_space(x, y - 1);
+            result = self.ship_is_in_space(&[x, y - 1]);
         }
         // Below
         if y < 9 && !result {
-            result = self.ship_is_in_space(x, y + 1);
+            result = self.ship_is_in_space(&[x, y + 1]);
         }
 
         result
     }
 
     /// Gets the current state of a space, if that space actually exists.
-    pub fn get_space_state(&self, x: u8, y: u8) -> Option<u8> {
+    pub fn get_space_state(&self, pos: &[u8; 2]) -> Option<u8> {
         let space_state: Option<u8>;
-        if let Some(i) = self.spaces.iter().position(|space| space.position == [x, y]) {
+        if let Some(i) = self.spaces.iter().position(|space| &space.position == pos) {
             space_state = Some(self.spaces[i].state);
         } else {
             space_state = None;

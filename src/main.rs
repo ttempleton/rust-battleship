@@ -158,10 +158,7 @@ fn main() {
 
                     // Only show ship locations during ship placement or if the
                     // current player is computer-controlled.
-                    if shown_player.ship_is_in_space(
-                        space.position[0],
-                        space.position[1]
-                    ) && (app.state == 0 || (space.state == 0 && app.players[app.turn as usize].is_cpu)) {
+                    if shown_player.ship_is_in_space(&space.position) && (app.state == 0 || (space.state == 0 && app.players[app.turn as usize].is_cpu)) {
                         image(&space_textures[3], transform, g);
                     } else {
                         image(&space_textures[space.state as usize], transform, g);
