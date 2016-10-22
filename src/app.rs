@@ -259,10 +259,70 @@ impl App {
         self.turn_end_timer = 0.0;
     }
 
-    /// Processes all left mouse clicks according to the current program state.
+    /// Returns true if it is currently a human player's turn.
+    fn is_player_turn(&self) -> bool {
+        self.turn_active && !self.players[self.turn as usize].is_cpu
+    }
+
+    /// Moves the active player's grid cursor.
+    fn move_grid_cursor(&mut self, direction: [i32; 2]) {
+        let new_cursor_i32 = [
+            self.players[self.turn as usize].grid_cursor[0] as i32 + direction[0],
+            self.players[self.turn as usize].grid_cursor[1] as i32 + direction[1]
+        ];
+
+        if new_cursor_i32[0] >= 0 && new_cursor_i32[0] < 10
+            && new_cursor_i32[1] >= 0 && new_cursor_i32[1] < 10 {
+            self.players[self.turn as usize].grid_cursor = [
+                new_cursor_i32[0] as u8,
+                new_cursor_i32[1] as u8
+            ];
+        }
+    }
+
+    /// Processes left button presses according to the current program state.
+    pub fn button_left(&mut self) {
+        if self.state == 1 && self.is_player_turn() {
+            self.move_grid_cursor([-1, 0]);
+        }
+    }
+
+    /// Processes right button presses according to the current program state.
+    pub fn button_right(&mut self) {
+        if self.state == 1 && self.is_player_turn() {
+            self.move_grid_cursor([1, 0]);
+        }
+    }
+
+    /// Processes up button presses according to the current program state.
+    pub fn button_up(&mut self) {
+        if self.state == 1 && self.is_player_turn() {
+            self.move_grid_cursor([0, -1]);
+        }
+    }
+
+    /// Processes down button presses according to the current program state.
+    pub fn button_down(&mut self) {
+        if self.state == 1 && self.is_player_turn() {
+            self.move_grid_cursor([0, 1]);
+        }
+    }
+
+    /// Processes primary button presses according to the current program state.
+    pub fn button_primary(&mut self) {
+        if self.state == 1 && self.is_player_turn() {
+            let grid_pos = self.players[self.turn as usize].grid_cursor.clone();
+
+            if self.players[self.not_turn()].get_space_state(&grid_pos) == Some(0) {
+                self.select_space(&grid_pos);
+            }
+        }
+    }
+
+    /// Processes left mouse clicks according to the current program state.
     pub fn mouse_left_click(&mut self) {
         if let Some(grid_pos) = self.mouse_cursor_grid_position() {
-            if self.state == 0 && self.turn_active && !self.players[self.turn as usize].is_cpu {
+            if self.state == 0 && self.is_player_turn() {
 
                 // State 0: place ships.
                 let mut ship = vec![];
@@ -276,7 +336,7 @@ impl App {
                         state: true,
                     });
                 }
-            } else if self.state == 1 && self.turn_active && !self.players[self.turn as usize].is_cpu {
+            } else if self.state == 1 && self.is_player_turn() {
 
                 // State 1: select spaces on opponent's grid.
                 if self.players[self.not_turn()].get_space_state(&grid_pos) == Some(0) {
@@ -286,11 +346,12 @@ impl App {
         }
     }
 
-    /// Processes all right mouse clicks according to the current program state.
+    /// Processes right mouse clicks according to the current program state.
     pub fn mouse_right_click(&mut self) {
         if self.state == 0 {
 
             // State 0: rotate ships.
+            // TODO: rotate ship function with direction parameter
             let mut new_ship_pos = vec![self.ship_temp_pos[0]];
             match self.ship_temp_dir {
                 0 => {
