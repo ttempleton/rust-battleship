@@ -131,14 +131,14 @@ fn main() {
             app.update(&u);
         }
 
-        // Probably shouldn't be doing it like this...
-        if let Some(_) = e.render_args() {
+        if e.render_args().is_some() {
             window.draw_2d(&e, |c, g| {
                 clear([0.6, 0.6, 1.0, 1.0], g);
 
-                let ref shown_player;
+                let ref current_player = app.players[app.turn as usize];
+                let shown_player;
                 if app.state == 0 {
-                    shown_player = &app.players[app.turn as usize];
+                    shown_player = current_player;
                 } else {
                     shown_player = &app.players[app.not_turn()];
                 }
@@ -163,7 +163,7 @@ fn main() {
 
                     // Only show ship locations during ship placement or if the
                     // current player is computer-controlled.
-                    if shown_player.ship_is_in_space(&space.position) && (app.state == 0 || (space.state == 0 && app.players[app.turn as usize].is_cpu)) {
+                    if shown_player.ship_is_in_space(&space.position) && (app.state == 0 || (space.state == 0 && current_player.is_cpu)) {
                         image(&space_textures[3], transform, g);
                     } else {
                         image(&space_textures[space.state as usize], transform, g);
@@ -183,10 +183,10 @@ fn main() {
                 }
 
                 // During the game, show the player's grid cursor.
-                if app.state == 1 && app.turn_end_timer == 0.0 && !app.players[app.turn as usize].is_cpu {
+                if app.state == 1 && app.turn_end_timer == 0.0 && !current_player.is_cpu {
                     let transform = c.transform.trans(
-                        (app.settings.space_size * app.players[app.turn as usize].grid_cursor[0] as u32 + app.grid_area[0]) as f64,
-                        (app.settings.space_size * app.players[app.turn as usize].grid_cursor[1] as u32 + app.grid_area[1]) as f64,
+                        (app.settings.space_size * current_player.grid_cursor[0] as u32 + app.grid_area[0]) as f64,
+                        (app.settings.space_size * current_player.grid_cursor[1] as u32 + app.grid_area[1]) as f64,
                     );
                     image(&grid_cursor_texture, transform, g);
                 }
