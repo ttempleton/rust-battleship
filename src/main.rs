@@ -135,12 +135,12 @@ fn main() {
             window.draw_2d(&e, |c, g| {
                 clear([0.6, 0.6, 1.0, 1.0], g);
 
-                let ref current_player = app.players[app.turn as usize];
+                let current_player = app.active_player();
                 let shown_player;
                 if app.state == 0 {
                     shown_player = current_player;
                 } else {
-                    shown_player = &app.players[app.not_turn()];
+                    shown_player = app.inactive_player();
                 }
 
                 // Ship icons above grid
@@ -192,13 +192,14 @@ fn main() {
                 }
 
                 // Current player text image
-                if !app.game_over {
-                    let player_text_size = player_text[app.turn as usize].get_size();
+                if app.get_winner().is_none() {
+                    let turn = app.turn();
+                    let player_text_size = player_text[turn].get_size();
                     let transform = c.transform.trans(
                         ((app.window_size[0] - player_text_size.0) / 2) as f64,
                         2.0
                     );
-                    image(&player_text[app.turn as usize], transform, g);
+                    image(&player_text[turn], transform, g);
                 }
 
                 // During turn transitions / game over, cover the window with
@@ -218,8 +219,7 @@ fn main() {
                 }
 
                 // Game over content, to appear over the black rectangle.
-                if app.game_over {
-                    let winner = app.winner.unwrap() as usize;
+                if let Some(winner) = app.get_winner() {
                     let game_over_text_size = game_over_text[0].get_size();
                     let wins_text_size = game_over_text[1].get_size();
                     let player_text_size = player_text[winner].get_size();

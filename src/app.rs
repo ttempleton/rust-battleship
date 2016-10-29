@@ -6,12 +6,11 @@ use settings::Settings;
 
 pub struct App {
     pub settings: Settings,
-    pub players: [Player; 2],
+    players: [Player; 2],
     pub state: u8,
-    pub turn: u8,
+    turn: u8,
     pub turn_active: bool,
-    pub game_over: bool,
-    pub winner: Option<u8>,
+    winner: Option<u8>,
     pub turn_end_timer: f64,
     pub cpu_turn_timer: f64,
     pub grid_area: [u32; 4],
@@ -45,7 +44,6 @@ impl App {
             state: 0,
             turn: 0,
             turn_active: true,
-            game_over: false,
             winner: None,
             turn_end_timer: 0.0,
             cpu_turn_timer: 0.0,
@@ -72,7 +70,7 @@ impl App {
                 self.state = 1;
             }
         } else if self.state == 1 || self.state == 2 {
-            if !self.turn_active && !self.game_over {
+            if !self.turn_active && self.winner.is_none() {
 
                 // Continue/end the end-of-turn delay.
                 if self.turn_end_timer < 1.5 {
@@ -81,7 +79,6 @@ impl App {
                     if self.state != 2 {
                         self.switch_turn();
                     } else {
-                        self.game_over = true;
                         self.winner = Some(self.turn);
                     }
                 }
@@ -247,7 +244,22 @@ impl App {
         select[0]
     }
 
-    /// Returns the player who is not currently taking their turn.
+    /// Provides a reference to the currently active player.
+    pub fn active_player(&self) -> &Player {
+        &self.players[self.turn as usize]
+    }
+
+    /// Provides a reference to the currently inactive player.
+    pub fn inactive_player(&self) -> &Player {
+        &self.players[self.not_turn()]
+    }
+
+    /// Returns as `usize` the index of the currently active player.
+    pub fn turn(&self) -> usize {
+        self.turn as usize
+    }
+
+    /// Returns as `usize` the index of the currently inactive player.
     pub fn not_turn(&self) -> usize {
         (self.turn + 1) as usize % 2
     }
@@ -262,6 +274,14 @@ impl App {
     /// Returns true if it is currently a human player's turn.
     fn is_player_turn(&self) -> bool {
         self.turn_active && !self.players[self.turn as usize].is_cpu
+    }
+
+    /// Returns as `usize` the winner, if there is one.
+    pub fn get_winner(&self) -> Option<usize> {
+        match self.winner {
+            Some(w) => Some(w as usize),
+            None => None
+        }
     }
 
     /// Moves the active player's grid cursor.
