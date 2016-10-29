@@ -12,12 +12,10 @@ impl Player {
         let mut spaces = vec![];
         for col in 0..10 {
             for row in 0..10 {
-                spaces.push(
-                    Space {
-                        state: 0,
-                        position: [col, row],
-                    }
-                );
+                spaces.push(Space {
+                    state: 0,
+                    position: [col, row],
+                });
             }
         }
 
@@ -154,6 +152,22 @@ impl Player {
         }
 
         space_state
+    }
+
+    /// Moves the player's grid cursor.
+    pub fn move_grid_cursor(&mut self, direction: [i32; 2]) {
+        let new_cursor = [
+            self.grid_cursor[0] as i32 + direction[0],
+            self.grid_cursor[1] as i32 + direction[1]
+        ];
+
+        if new_cursor[0] >= 0 && new_cursor[0] < 10
+            && new_cursor[1] >= 0 && new_cursor[1] < 10 {
+            self.grid_cursor = [
+                new_cursor[0] as u8,
+                new_cursor[1] as u8
+            ];
+        }
     }
 }
 

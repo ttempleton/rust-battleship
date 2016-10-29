@@ -249,6 +249,11 @@ impl App {
         &self.players[self.turn as usize]
     }
 
+    /// Provides a mutable reference to the currently active player.
+    fn active_player_mut(&mut self) -> &mut Player {
+        &mut self.players[self.turn as usize]
+    }
+
     /// Provides a reference to the currently inactive player.
     pub fn inactive_player(&self) -> &Player {
         &self.players[self.not_turn()]
@@ -284,47 +289,31 @@ impl App {
         }
     }
 
-    /// Moves the active player's grid cursor.
-    fn move_grid_cursor(&mut self, direction: [i32; 2]) {
-        let new_cursor_i32 = [
-            self.players[self.turn as usize].grid_cursor[0] as i32 + direction[0],
-            self.players[self.turn as usize].grid_cursor[1] as i32 + direction[1]
-        ];
-
-        if new_cursor_i32[0] >= 0 && new_cursor_i32[0] < 10
-            && new_cursor_i32[1] >= 0 && new_cursor_i32[1] < 10 {
-            self.players[self.turn as usize].grid_cursor = [
-                new_cursor_i32[0] as u8,
-                new_cursor_i32[1] as u8
-            ];
-        }
-    }
-
     /// Processes left button presses according to the current program state.
     pub fn button_left(&mut self) {
         if self.state == 1 && self.is_player_turn() {
-            self.move_grid_cursor([-1, 0]);
+            self.active_player_mut().move_grid_cursor([-1, 0]);
         }
     }
 
     /// Processes right button presses according to the current program state.
     pub fn button_right(&mut self) {
         if self.state == 1 && self.is_player_turn() {
-            self.move_grid_cursor([1, 0]);
+            self.active_player_mut().move_grid_cursor([1, 0]);
         }
     }
 
     /// Processes up button presses according to the current program state.
     pub fn button_up(&mut self) {
         if self.state == 1 && self.is_player_turn() {
-            self.move_grid_cursor([0, -1]);
+            self.active_player_mut().move_grid_cursor([0, -1]);
         }
     }
 
     /// Processes down button presses according to the current program state.
     pub fn button_down(&mut self) {
         if self.state == 1 && self.is_player_turn() {
-            self.move_grid_cursor([0, 1]);
+            self.active_player_mut().move_grid_cursor([0, 1]);
         }
     }
 
