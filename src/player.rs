@@ -44,14 +44,18 @@ impl Player {
         let mut valid = false;
         let mut x: u8;
         let mut y: u8;
-        let mut direction: u8;
+        let mut direction: ShipDirection;
         let mut rng = thread_rng();
 
         // RNG a position and direction, then make sure it's valid.
         while !valid {
             x = rng.gen_range(0, 10);
             y = rng.gen_range(0, 10);
-            direction = rng.gen_range(0, 2);
+            direction = match rng.gen_range(0, 2) {
+                0 => ShipDirection::Horizontal,
+                1 => ShipDirection::Vertical,
+                _ => unreachable!()
+            };
             ship = self.get_ship_position([x, y], direction, length);
             valid = self.valid_ship_position(&ship);
         }
@@ -64,15 +68,14 @@ impl Player {
     pub fn get_ship_position(
         &self,
         head: [u8; 2],
-        direction: u8,
+        direction: ShipDirection,
         length: u8
     ) -> Vec<[u8; 2]> {
         let mut ship = vec![head];
         for pos in 1..length {
             match direction {
-                0 => ship.push([head[0] + pos as u8, head[1]]),
-                1 => ship.push([head[0], head[1] + pos as u8]),
-                _ => {}
+                ShipDirection::Horizontal => ship.push([head[0] + pos as u8, head[1]]),
+                ShipDirection::Vertical => ship.push([head[0], head[1] + pos as u8])
             }
         }
 
@@ -174,6 +177,12 @@ impl Player {
 pub struct Ship {
     pub state: bool,
     pub position: Vec<[u8; 2]>,
+}
+
+#[derive(Clone, Copy)]
+pub enum ShipDirection {
+    Horizontal,
+    Vertical,
 }
 
 pub struct Space {

@@ -1,7 +1,7 @@
 use piston_window::UpdateArgs;
 use rand::{Rng, thread_rng};
 
-use player::{Player, Ship};
+use player::{Player, Ship, ShipDirection};
 use settings::Settings;
 
 pub struct App {
@@ -17,7 +17,7 @@ pub struct App {
     pub window_size: [u32; 2],
     mouse_cursor: [f64; 2],
     pub ship_temp_pos: Vec<[u8; 2]>,
-    ship_temp_dir: u8,
+    ship_temp_dir: ShipDirection,
 }
 
 impl App {
@@ -51,7 +51,7 @@ impl App {
             window_size: window_size,
             mouse_cursor: [0.0; 2],
             ship_temp_pos: vec![[0, 0], [1, 0]],
-            ship_temp_dir: 0,
+            ship_temp_dir: ShipDirection::Horizontal,
         }
     }
 
@@ -363,21 +363,20 @@ impl App {
             // TODO: rotate ship function with direction parameter
             let mut new_ship_pos = vec![self.ship_temp_pos[0]];
             match self.ship_temp_dir {
-                0 => {
-                    self.ship_temp_dir = 1;
+                ShipDirection::Horizontal => {
+                    self.ship_temp_dir = ShipDirection::Vertical;
                     let length = self.players[self.turn as usize].ships.len() + 2;
                     for pos in 1..length {
                         new_ship_pos.push([self.ship_temp_pos[0][0], self.ship_temp_pos[0][1] + pos as u8]);
                     }
                 },
-                1 => {
-                    self.ship_temp_dir = 0;
+                ShipDirection::Vertical => {
+                    self.ship_temp_dir = ShipDirection::Horizontal;
                     let length = self.players[self.turn as usize].ships.len() + 2;
                     for pos in 1..length {
                         new_ship_pos.push([self.ship_temp_pos[0][0] + pos as u8, self.ship_temp_pos[0][1]]);
                     }
                 },
-                _ => {}
             }
 
             self.ship_temp_pos = new_ship_pos;
