@@ -249,11 +249,6 @@ impl App {
         &self.players[self.turn as usize]
     }
 
-    /// Provides a mutable reference to the currently active player.
-    fn active_player_mut(&mut self) -> &mut Player {
-        &mut self.players[self.turn as usize]
-    }
-
     /// Provides a reference to the currently inactive player.
     pub fn inactive_player(&self) -> &Player {
         &self.players[self.not_turn()]
@@ -292,35 +287,35 @@ impl App {
     /// Processes left button presses according to the current program state.
     pub fn button_left(&mut self) {
         if self.state == 1 && self.is_player_turn() {
-            self.active_player_mut().move_grid_cursor([-1, 0]);
+            self.players[self.turn as usize].move_grid_cursor([-1, 0]);
         }
     }
 
     /// Processes right button presses according to the current program state.
     pub fn button_right(&mut self) {
         if self.state == 1 && self.is_player_turn() {
-            self.active_player_mut().move_grid_cursor([1, 0]);
+            self.players[self.turn as usize].move_grid_cursor([1, 0]);
         }
     }
 
     /// Processes up button presses according to the current program state.
     pub fn button_up(&mut self) {
         if self.state == 1 && self.is_player_turn() {
-            self.active_player_mut().move_grid_cursor([0, -1]);
+            self.players[self.turn as usize].move_grid_cursor([0, -1]);
         }
     }
 
     /// Processes down button presses according to the current program state.
     pub fn button_down(&mut self) {
         if self.state == 1 && self.is_player_turn() {
-            self.active_player_mut().move_grid_cursor([0, 1]);
+            self.players[self.turn as usize].move_grid_cursor([0, 1]);
         }
     }
 
     /// Processes primary button presses according to the current program state.
     pub fn button_primary(&mut self) {
         if self.state == 1 && self.is_player_turn() {
-            let grid_pos = self.players[self.turn as usize].grid_cursor.clone();
+            let grid_pos = self.players[self.turn as usize].get_grid_cursor();
 
             if self.players[self.not_turn()].get_space_state(&grid_pos) == Some(0) {
                 self.select_space(&grid_pos);
@@ -403,7 +398,7 @@ impl App {
             // State 1: set the player's grid cursor.
             if self.state == 1 {
                 if self.turn_end_timer == 0.0 && !player.is_cpu {
-                    player.grid_cursor = grid_pos;
+                    player.set_grid_cursor(&grid_pos);
                 }
             }
         }

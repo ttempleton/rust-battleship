@@ -184,9 +184,10 @@ fn main() {
 
                 // During the game, show the player's grid cursor.
                 if app.state == 1 && app.turn_end_timer == 0.0 && !current_player.is_cpu {
+                    let grid_cursor = current_player.get_grid_cursor();
                     let transform = c.transform.trans(
-                        (app.settings.space_size * current_player.grid_cursor[0] as u32 + app.grid_area[0]) as f64,
-                        (app.settings.space_size * current_player.grid_cursor[1] as u32 + app.grid_area[1]) as f64,
+                        (app.settings.space_size * grid_cursor[0] as u32 + app.grid_area[0]) as f64,
+                        (app.settings.space_size * grid_cursor[1] as u32 + app.grid_area[1]) as f64,
                     );
                     image(&grid_cursor_texture, transform, g);
                 }

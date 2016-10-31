@@ -4,7 +4,7 @@ pub struct Player {
     pub is_cpu: bool,
     pub spaces: Vec<Space>,
     pub ships: Vec<Ship>,
-    pub grid_cursor: [u8; 2],
+    grid_cursor: [u8; 2],
 }
 
 impl Player {
@@ -157,7 +157,13 @@ impl Player {
         space_state
     }
 
-    /// Moves the player's grid cursor.
+    /// Returns the coordinates of the player's grid cursor.
+    pub fn get_grid_cursor(&self) -> [u8; 2] {
+        self.grid_cursor.clone()
+    }
+
+    /// Moves the player's grid cursor in a `direction` relative to the current
+    /// grid cursor coordinates.
     pub fn move_grid_cursor(&mut self, direction: [i32; 2]) {
         let new_cursor = [
             self.grid_cursor[0] as i32 + direction[0],
@@ -166,11 +172,16 @@ impl Player {
 
         if new_cursor[0] >= 0 && new_cursor[0] < 10
             && new_cursor[1] >= 0 && new_cursor[1] < 10 {
-            self.grid_cursor = [
+            self.set_grid_cursor(&[
                 new_cursor[0] as u8,
                 new_cursor[1] as u8
-            ];
+            ]);
         }
+    }
+
+    /// Sets the player's grid cursor coordinates.
+    pub fn set_grid_cursor(&mut self, new_cursor: &[u8; 2]) {
+        self.grid_cursor = *new_cursor;
     }
 }
 
