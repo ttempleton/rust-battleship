@@ -27,6 +27,151 @@ impl Player {
         }
     }
 
+    /// Selects a space and checks the status of ships if there's a hit.
+    pub fn select_space(&mut self, pos: &[u8; 2]) -> u8 {
+        let mut app_state = 1;
+        let mut space_state = 1;
+        let mut hit_ship = None;
+        for (i, ship) in self.ships.iter().enumerate() {
+            if ship.position.contains(pos) {
+                space_state = 2;
+                hit_ship = Some(i);
+            }
+        }
+
+        let space = self.spaces.iter()
+            .position(|space| &space.position == pos)
+            .unwrap();
+        self.spaces[space].state = space_state;
+
+        if space_state == 2 {
+            // Check if this ship has sunk.
+            let hit_ship = hit_ship.unwrap();
+            let mut ship_state = false;
+            for ship_pos in &self.ships[hit_ship].position {
+                if self.get_space_state(&ship_pos) == Some(0) {
+                    ship_state = true;
+                }
+            }
+
+            if !ship_state {
+                self.ships[hit_ship].state = ship_state;
+            }
+
+            // Check if any ships are left.
+            let mut all_sunk = true;
+            for ship in &self.ships {
+                if ship.state {
+                    all_sunk = false;
+                    break;
+                }
+            }
+
+            if all_sunk {
+                app_state = 2;
+            }
+        }
+
+        app_state
+    }
+
+    /// Determines the next space a CPU player will select.
+    pub fn cpu_select_space(&mut self) -> [u8; 2] {
+        let mut rng = thread_rng();
+        let mut first_hit = None;
+        let mut select = vec![];
+
+        // Determines the order of priority of directions to check if there are
+        // any hit spaces found.
+        let mut directions: [[i32; 2]; 4] = [
+            [-1, 0],
+            [1, 0],
+            [0, -1],
+            [0, 1]
+        ];
+        rng.shuffle(&mut directions);
+
+        for space in self.spaces.iter().filter(|s| s.state == 2) {
+
+            // Get the hit ship.
+            let mut ship: Option<&Ship> = None;
+            for s in &self.ships {
+                if s.position.contains(&space.position) {
+                    ship = Some(s);
+                    break;
+                }
+            }
+
+            // Make sure the hit ship hasn't been sunk.
+            if ship.unwrap().state {
+                if first_hit.is_none() {
+                    first_hit = Some(space.position);
+                }
+
+                // Check if this space forms part of a line of hit spaces.  If
+                // it does, and the space at the end hasn't been selected yet,
+                // it's a candidate for selection this turn.
+                for check in &directions {
+                    let mut xc = (space.position[0] as i32 + check[0]) as u8;
+                    let mut yc = (space.position[1] as i32 + check[1]) as u8;
+
+                    while self.get_space_state(&[xc, yc]) == Some(2) {
+                        xc = (xc as i32 + check[0]) as u8;
+                        yc = (yc as i32 + check[1]) as u8;
+                    }
+
+                    if self.get_space_state(&[xc, yc]) == Some(0) && ((xc as i32 - check[0]) as u8 != space.position[0] || (yc as i32 - check[1]) as u8 != space.position[1]) {
+                        select.push([xc, yc]);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // If a hit space was found, but no hit spaces next to it, select a
+        // non-selected space next to it.
+        if first_hit.is_some() && select.len() == 0 {
+            let first_hit = first_hit.unwrap();
+            let first_hit_i32 = [first_hit[0] as i32, first_hit[1] as i32];
+            for check in &directions {
+                let pos = [
+                    (first_hit_i32[0] + check[0]) as u8,
+                    (first_hit_i32[1] + check[1]) as u8
+                ];
+                if self.get_space_state(&pos) == Some(0) {
+                    select.push(pos);
+                    break;
+                }
+            }
+        }
+
+        // If no spaces were selected to check, just check any available space.
+        if select.len() == 0 {
+            let mut pos: Option<[u8; 2]> = None;
+            while pos.is_none() {
+                let space = [
+                    rng.gen_range(0, 10),
+                    rng.gen_range(0, 10)
+                ];
+                if self.get_space_state(&space) == Some(0) {
+                    pos = Some(space);
+                }
+            }
+
+            select.push(pos.unwrap());
+        }
+
+        // The way the potential selections are chosen, empty spaces to the
+        // right or bottom of a line of hit spaces will always be chosen first,
+        // so the list of selections should be shuffled.
+        if select.len() > 1 {
+            select.dedup();
+            rng.shuffle(&mut select);
+        }
+
+        select[0]
+    }
+
     pub fn cpu_place_ships(&mut self) {
         for length in 2..6 {
             let ship_pos = self.cpu_place_ship(length);

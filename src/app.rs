@@ -1,5 +1,4 @@
 use piston_window::UpdateArgs;
-use rand::{Rng, thread_rng};
 
 use player::{Player, Ship, ShipDirection};
 use settings::Settings;
@@ -89,159 +88,13 @@ impl App {
                 self.cpu_turn_timer += u.dt;
                 if self.cpu_turn_timer >= 1.0 {
                     self.cpu_turn_timer = 0.0;
-                    let cpu_space = self.cpu_select_space();
-                    self.select_space(&cpu_space);
+                    let ref mut opponent = self.players[self.not_turn()];
+                    let cpu_space = opponent.cpu_select_space();
+                    self.state = opponent.select_space(&cpu_space);
+                    self.turn_active = false;
                 }
             }
         }
-    }
-
-    /// Selects a space, and performs related checks on the status of ships if
-    /// there's a hit.
-    fn select_space(&mut self, pos: &[u8; 2]) {
-        let ref mut opponent = self.players[self.not_turn()];
-        let mut space_state = 1;
-        let mut hit_ship = None;
-        for (i, ship) in opponent.ships.iter().enumerate() {
-            if ship.position.contains(pos) {
-                space_state = 2;
-                hit_ship = Some(i);
-            }
-        }
-
-        let space = opponent.spaces.iter().position(|space| &space.position == pos).unwrap();
-        opponent.spaces[space].state = space_state;
-
-        if space_state == 2 {
-            // Check if this ship has sunk.
-            let hit_ship = hit_ship.unwrap();
-            let mut ship_state = false;
-            for ship_pos in &opponent.ships[hit_ship].position {
-                if opponent.get_space_state(&ship_pos) == Some(0) {
-                    ship_state = true;
-                }
-            }
-
-            if !ship_state {
-                opponent.ships[hit_ship].state = ship_state;
-            }
-
-            // Check if any ships are left.
-            let mut all_sunk = true;
-            for ship in &opponent.ships {
-                if ship.state {
-                    all_sunk = false;
-                    break;
-                }
-            }
-
-            if all_sunk {
-                self.state = 2;
-            }
-        }
-
-        self.turn_active = false;
-    }
-
-    /// Uses RNG to select a space for CPU players.
-    fn cpu_select_space(&mut self) -> [u8; 2] {
-        let mut rng = thread_rng();
-        let mut first_hit = None;
-        let mut select = vec![];
-
-        // Determines the order of priority of directions to check if there are
-        // any hit spaces found.
-        let mut directions: [[i32; 2]; 4] = [
-            [-1, 0],
-            [1, 0],
-            [0, -1],
-            [0, 1]
-        ];
-        rng.shuffle(&mut directions);
-
-        let ref opponent = self.players[self.not_turn()];
-
-        for space in &opponent.spaces {
-            if space.state == 2 {
-
-                // Get the hit ship.
-                let mut ship: Option<&Ship> = None;
-                for s in &opponent.ships {
-                    if s.position.contains(&space.position) {
-                        ship = Some(s);
-                        break;
-                    }
-                }
-
-                // Make sure the hit ship hasn't been sunk.
-                if ship.unwrap().state {
-                    if first_hit.is_none() {
-                        first_hit = Some(space.position);
-                    }
-
-                    // Check if this space forms part of a line of hit spaces.
-                    // If it does, and the space at the end hasn't been
-                    // selected yet, it's a candidate for selection this turn.
-                    for check in &directions {
-                        let mut xc = space.position[0];
-                        let mut yc = space.position[1];
-
-                        while opponent.get_space_state(&[(xc as i32 + check[0]) as u8, (yc as i32 + check[1]) as u8]) == Some(2) {
-                            xc = (xc as i32 + check[0]) as u8;
-                            yc = (yc as i32 + check[1]) as u8;
-                        }
-
-                        if opponent.get_space_state(&[(xc as i32 + check[0]) as u8, (yc as i32 + check[1]) as u8]) == Some(0) && (xc != space.position[0] || yc != space.position[1]) {
-                            select.push([
-                                (xc as i32 + check[0]) as u8,
-                                (yc as i32 + check[1]) as u8
-                            ]);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        // If a hit space was found, but no hit spaces next to it, select a
-        // non-selected space next to it.
-        if first_hit.is_some() && select.len() == 0 {
-            let first_hit = first_hit.unwrap();
-            for check in &directions {
-                if opponent.get_space_state(&[(first_hit[0] as i32 + check[0]) as u8, (first_hit[1] as i32 + check[1]) as u8]) == Some(0) {
-                    select.push([
-                        (first_hit[0] as i32 + check[0]) as u8,
-                        (first_hit[1] as i32 + check[1]) as u8
-                    ]);
-                    break;
-                }
-            }
-        }
-
-        // If no spaces were selected to check, just check any available space.
-        if select.len() == 0 {
-            let mut x: u8 = rng.gen_range(0, self.settings.width);
-            let mut y: u8 = rng.gen_range(0, self.settings.height);
-            let mut space_state = opponent.get_space_state(&[x, y]);
-
-            while space_state != Some(0) {
-                x = rng.gen_range(0, self.settings.width);
-                y = rng.gen_range(0, self.settings.height);
-                space_state = opponent.get_space_state(&[x, y]);
-            }
-
-            select.push([x, y]);
-        }
-
-        // The way the potential selections are chosen, empty spaces to the
-        // right or bottom of a line of hit spaces will always be chosen first,
-        // so the list of selections should be shuffled.
-        if select.len() > 1 {
-            select.dedup();
-            rng.shuffle(&mut select);
-        }
-
-        select[0]
     }
 
     /// Provides a reference to the currently active player.
@@ -318,7 +171,8 @@ impl App {
             let grid_pos = self.players[self.turn as usize].get_grid_cursor();
 
             if self.players[self.not_turn()].get_space_state(&grid_pos) == Some(0) {
-                self.select_space(&grid_pos);
+                self.state = self.players[self.not_turn()].select_space(&grid_pos);
+                self.turn_active = false;
             }
         }
     }
@@ -344,7 +198,8 @@ impl App {
 
                 // State 1: select spaces on opponent's grid.
                 if self.players[self.not_turn()].get_space_state(&grid_pos) == Some(0) {
-                    self.select_space(&grid_pos);
+                    self.state = self.players[self.not_turn()].select_space(&grid_pos);
+                    self.turn_active = false;
                 }
             }
         }
