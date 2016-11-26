@@ -1,7 +1,8 @@
 use piston_window::UpdateArgs;
 
-use player::{Player, Ship, ShipDirection};
+use player::Player;
 use settings::Settings;
+use ship::{Ship, ShipDirection};
 
 pub struct App {
     pub settings: Settings,
@@ -187,10 +188,7 @@ impl App {
                 }
 
                 if self.players[self.turn as usize].valid_ship_position(&ship) {
-                    self.players[self.turn as usize].ships.push(Ship {
-                        position: ship,
-                        state: true,
-                    });
+                    self.players[self.turn as usize].ships.push(Ship::new(ship));
                 }
             } else if self.state == GameState::Active && self.is_player_turn() {
 

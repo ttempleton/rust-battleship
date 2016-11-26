@@ -4,11 +4,13 @@ extern crate rand;
 mod app;
 mod player;
 mod settings;
+mod ship;
+mod space;
 
 use piston_window::*;
 use std::path::PathBuf;
 use app::GameState;
-use player::SpaceState;
+use space::SpaceState;
 
 fn assets_dir(mut dir: PathBuf) -> Result<PathBuf, &'static str> {
     let mut result = None;

@@ -1,5 +1,7 @@
 use rand::{Rng, thread_rng};
 use app::GameState;
+use ship::{Ship, ShipDirection};
+use space::{Space, SpaceState};
 
 pub struct Player {
     pub is_cpu: bool,
@@ -13,10 +15,7 @@ impl Player {
         let mut spaces = vec![];
         for col in 0..10 {
             for row in 0..10 {
-                spaces.push(Space {
-                    state: SpaceState::Unchecked,
-                    position: [col, row],
-                });
+                spaces.push(Space::new([col, row]));
             }
         }
 
@@ -176,11 +175,7 @@ impl Player {
     pub fn cpu_place_ships(&mut self) {
         for length in 2..6 {
             let ship_pos = self.cpu_place_ship(length);
-
-            self.ships.push(Ship {
-                position: ship_pos,
-                state: true,
-            });
+            self.ships.push(Ship::new(ship_pos));
         }
     }
 
@@ -333,27 +328,5 @@ impl Player {
     pub fn set_grid_cursor(&mut self, new_cursor: &[u8; 2]) {
         self.grid_cursor = *new_cursor;
     }
-}
-
-pub struct Ship {
-    pub state: bool,
-    pub position: Vec<[u8; 2]>,
-}
-
-#[derive(Clone, Copy)]
-pub enum ShipDirection {
-    Horizontal,
-    Vertical,
-}
-
-pub struct Space {
-    pub state: SpaceState,
-    pub position: [u8; 2],
-}
-
-#[derive(Clone, Copy, PartialEq)]
-pub enum SpaceState {
-    Unchecked,
-    Checked(bool)
 }
 
