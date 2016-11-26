@@ -7,6 +7,8 @@ mod settings;
 
 use piston_window::*;
 use std::path::PathBuf;
+use app::GameState;
+use player::SpaceState;
 
 fn assets_dir(mut dir: PathBuf) -> Result<PathBuf, &'static str> {
     let mut result = None;
@@ -136,12 +138,10 @@ fn main() {
                 clear([0.6, 0.6, 1.0, 1.0], g);
 
                 let current_player = app.active_player();
-                let shown_player;
-                if app.state == 0 {
-                    shown_player = current_player;
-                } else {
-                    shown_player = app.inactive_player();
-                }
+                let shown_player = match app.state {
+                    GameState::ShipPlacement => current_player,
+                    _ => app.inactive_player()
+                };
 
                 // Ship icons above grid
                 for (i, ship) in shown_player.ships.iter().enumerate() {
@@ -163,16 +163,21 @@ fn main() {
 
                     // Only show ship locations during ship placement or if the
                     // current player is computer-controlled.
-                    if shown_player.ship_is_in_space(&space.position) && (app.state == 0 || (space.state == 0 && current_player.is_cpu)) {
+                    if shown_player.ship_is_in_space(&space.position) && (app.state == GameState::ShipPlacement || (space.state == SpaceState::Unchecked && current_player.is_cpu)) {
                         image(&space_textures[3], transform, g);
                     } else {
-                        image(&space_textures[space.state as usize], transform, g);
+                        let space_state: usize = match space.state {
+                            SpaceState::Unchecked => 0,
+                            SpaceState::Checked(false) => 1,
+                            SpaceState::Checked(true) => 2
+                        };
+                        image(&space_textures[space_state], transform, g);
                     }
                 }
 
                 // During ship placement, show the temporary position of the
                 // next ship to be placed.
-                if app.state == 0 {
+                if app.state == GameState::ShipPlacement {
                     for temp_ship in &app.ship_temp_pos {
                         let transform = c.transform.trans(
                             (app.settings.space_size as u32 * temp_ship[0] as u32 + app.grid_area[0]) as f64,
@@ -183,7 +188,7 @@ fn main() {
                 }
 
                 // During the game, show the player's grid cursor.
-                if app.state == 1 && app.turn_end_timer == 0.0 && !current_player.is_cpu {
+                if app.state == GameState::Active && app.turn_end_timer == 0.0 && !current_player.is_cpu {
                     let grid_cursor = current_player.get_grid_cursor();
                     let transform = c.transform.trans(
                         (app.settings.space_size * grid_cursor[0] as u32 + app.grid_area[0]) as f64,
@@ -206,7 +211,7 @@ fn main() {
                 // During turn transitions / game over, cover the window with
                 // a black rectangle of increasing opacity.
                 if !app.turn_active && app.turn_end_timer >= 0.75 {
-                    let alpha = if app.state != 2 {
+                    let alpha = if app.state != GameState::Over {
                         (app.turn_end_timer as f32 - 0.75) / 0.75
                     } else {
                         (app.turn_end_timer as f32 - 0.75) / 1.125

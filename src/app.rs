@@ -6,7 +6,7 @@ use settings::Settings;
 pub struct App {
     pub settings: Settings,
     players: [Player; 2],
-    pub state: u8,
+    pub state: GameState,
     turn: u8,
     pub turn_active: bool,
     winner: Option<u8>,
@@ -40,7 +40,7 @@ impl App {
                 height: height,
             },
             players: [Player::new(false), Player::new(true)],
-            state: 0,
+            state: GameState::ShipPlacement,
             turn: 0,
             turn_active: true,
             winner: None,
@@ -55,7 +55,7 @@ impl App {
     }
 
     pub fn update(&mut self, u: &UpdateArgs) {
-        if self.state == 0 {
+        if self.state == GameState::ShipPlacement {
             if self.players[self.turn as usize].is_cpu {
                 self.players[self.turn as usize].cpu_place_ships();
             }
@@ -66,16 +66,16 @@ impl App {
 
             // All ships have been placed; start the game.
             if self.players[0].ships.len() == 4 && self.players[1].ships.len() == 4 {
-                self.state = 1;
+                self.state = GameState::Active;
             }
-        } else if self.state == 1 || self.state == 2 {
+        } else if self.state == GameState::Active || self.state == GameState::Over {
             if !self.turn_active && self.winner.is_none() {
 
                 // Continue/end the end-of-turn delay.
                 if self.turn_end_timer < 1.5 {
                     self.turn_end_timer += u.dt;
                 } else {
-                    if self.state != 2 {
+                    if self.state == GameState::Active {
                         self.switch_turn();
                     } else {
                         self.winner = Some(self.turn);
@@ -139,38 +139,38 @@ impl App {
 
     /// Processes left button presses according to the current program state.
     pub fn button_left(&mut self) {
-        if self.state == 1 && self.is_player_turn() {
+        if self.state == GameState::Active && self.is_player_turn() {
             self.players[self.turn as usize].move_grid_cursor([-1, 0]);
         }
     }
 
     /// Processes right button presses according to the current program state.
     pub fn button_right(&mut self) {
-        if self.state == 1 && self.is_player_turn() {
+        if self.state == GameState::Active && self.is_player_turn() {
             self.players[self.turn as usize].move_grid_cursor([1, 0]);
         }
     }
 
     /// Processes up button presses according to the current program state.
     pub fn button_up(&mut self) {
-        if self.state == 1 && self.is_player_turn() {
+        if self.state == GameState::Active && self.is_player_turn() {
             self.players[self.turn as usize].move_grid_cursor([0, -1]);
         }
     }
 
     /// Processes down button presses according to the current program state.
     pub fn button_down(&mut self) {
-        if self.state == 1 && self.is_player_turn() {
+        if self.state == GameState::Active && self.is_player_turn() {
             self.players[self.turn as usize].move_grid_cursor([0, 1]);
         }
     }
 
     /// Processes primary button presses according to the current program state.
     pub fn button_primary(&mut self) {
-        if self.state == 1 && self.is_player_turn() {
+        if self.state == GameState::Active && self.is_player_turn() {
             let grid_pos = self.players[self.turn as usize].get_grid_cursor();
 
-            if self.players[self.not_turn()].get_space_state(&grid_pos) == Some(0) {
+            if self.players[self.not_turn()].space_is_unchecked(&grid_pos) {
                 self.state = self.players[self.not_turn()].select_space(&grid_pos);
                 self.turn_active = false;
             }
@@ -180,9 +180,7 @@ impl App {
     /// Processes left mouse clicks according to the current program state.
     pub fn mouse_left_click(&mut self) {
         if let Some(grid_pos) = self.mouse_cursor_grid_position() {
-            if self.state == 0 && self.is_player_turn() {
-
-                // State 0: place ships.
+            if self.state == GameState::ShipPlacement && self.is_player_turn() {
                 let mut ship = vec![];
                 for pos in &self.ship_temp_pos {
                     ship.push(*pos);
@@ -194,10 +192,9 @@ impl App {
                         state: true,
                     });
                 }
-            } else if self.state == 1 && self.is_player_turn() {
+            } else if self.state == GameState::Active && self.is_player_turn() {
 
-                // State 1: select spaces on opponent's grid.
-                if self.players[self.not_turn()].get_space_state(&grid_pos) == Some(0) {
+                if self.players[self.not_turn()].space_is_unchecked(&grid_pos) {
                     self.state = self.players[self.not_turn()].select_space(&grid_pos);
                     self.turn_active = false;
                 }
@@ -207,7 +204,7 @@ impl App {
 
     /// Processes right mouse clicks according to the current program state.
     pub fn mouse_right_click(&mut self) {
-        if self.state == 0 {
+        if self.state == GameState::ShipPlacement {
 
             // State 0: rotate ships.
             // TODO: rotate ship function with direction parameter
@@ -238,11 +235,10 @@ impl App {
         self.mouse_cursor = *c;
 
         if let Some(grid_pos) = self.mouse_cursor_grid_position() {
+            let is_player_turn = self.is_player_turn();
             let ref mut player = self.players[self.turn as usize];
 
-            // During ship placement, set the temporary ship position so it can
-            // be drawn by the window renderer.
-            if self.state == 0 {
+            if self.state == GameState::ShipPlacement {
                 self.ship_temp_pos = player.get_ship_position(
                     grid_pos,
                     self.ship_temp_dir,
@@ -250,11 +246,8 @@ impl App {
                 );
             }
 
-            // State 1: set the player's grid cursor.
-            if self.state == 1 {
-                if self.turn_end_timer == 0.0 && !player.is_cpu {
-                    player.set_grid_cursor(&grid_pos);
-                }
+            if self.state == GameState::Active && is_player_turn {
+                player.set_grid_cursor(&grid_pos);
             }
         }
     }
@@ -277,5 +270,12 @@ impl App {
 
         position
     }
+}
+
+#[derive(PartialEq)]
+pub enum GameState {
+    ShipPlacement,
+    Active,
+    Over
 }
 

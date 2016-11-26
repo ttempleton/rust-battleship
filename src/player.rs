@@ -1,4 +1,5 @@
 use rand::{Rng, thread_rng};
+use app::GameState;
 
 pub struct Player {
     pub is_cpu: bool,
@@ -13,7 +14,7 @@ impl Player {
         for col in 0..10 {
             for row in 0..10 {
                 spaces.push(Space {
-                    state: 0,
+                    state: SpaceState::Unchecked,
                     position: [col, row],
                 });
             }
@@ -28,13 +29,13 @@ impl Player {
     }
 
     /// Selects a space and checks the status of ships if there's a hit.
-    pub fn select_space(&mut self, pos: &[u8; 2]) -> u8 {
-        let mut app_state = 1;
-        let mut space_state = 1;
+    pub fn select_space(&mut self, pos: &[u8; 2]) -> GameState {
+        let mut game_state = GameState::Active;
+        let mut space_state = SpaceState::Checked(false);
         let mut hit_ship = None;
         for (i, ship) in self.ships.iter().enumerate() {
             if ship.position.contains(pos) {
-                space_state = 2;
+                space_state = SpaceState::Checked(true);
                 hit_ship = Some(i);
             }
         }
@@ -44,12 +45,12 @@ impl Player {
             .unwrap();
         self.spaces[space].state = space_state;
 
-        if space_state == 2 {
+        if space_state == SpaceState::Checked(true) {
             // Check if this ship has sunk.
             let hit_ship = hit_ship.unwrap();
             let mut ship_state = false;
             for ship_pos in &self.ships[hit_ship].position {
-                if self.get_space_state(&ship_pos) == Some(0) {
+                if self.space_is_unchecked(&ship_pos) {
                     ship_state = true;
                 }
             }
@@ -68,11 +69,11 @@ impl Player {
             }
 
             if all_sunk {
-                app_state = 2;
+                game_state = GameState::Over;
             }
         }
 
-        app_state
+        game_state
     }
 
     /// Determines the next space a CPU player will select.
@@ -91,7 +92,7 @@ impl Player {
         ];
         rng.shuffle(&mut directions);
 
-        for space in self.spaces.iter().filter(|s| s.state == 2) {
+        for space in self.spaces.iter().filter(|s| s.state == SpaceState::Checked(true)) {
 
             // Get the hit ship.
             let mut ship: Option<&Ship> = None;
@@ -115,12 +116,12 @@ impl Player {
                     let mut xc = (space.position[0] as i32 + check[0]) as u8;
                     let mut yc = (space.position[1] as i32 + check[1]) as u8;
 
-                    while self.get_space_state(&[xc, yc]) == Some(2) {
+                    while self.space_is_hit(&[xc, yc]) {
                         xc = (xc as i32 + check[0]) as u8;
                         yc = (yc as i32 + check[1]) as u8;
                     }
 
-                    if self.get_space_state(&[xc, yc]) == Some(0) && ((xc as i32 - check[0]) as u8 != space.position[0] || (yc as i32 - check[1]) as u8 != space.position[1]) {
+                    if self.space_is_unchecked(&[xc, yc]) && ((xc as i32 - check[0]) as u8 != space.position[0] || (yc as i32 - check[1]) as u8 != space.position[1]) {
                         select.push([xc, yc]);
                         break;
                     }
@@ -138,7 +139,7 @@ impl Player {
                     (first_hit_i32[0] + check[0]) as u8,
                     (first_hit_i32[1] + check[1]) as u8
                 ];
-                if self.get_space_state(&pos) == Some(0) {
+                if self.space_is_unchecked(&pos) {
                     select.push(pos);
                     break;
                 }
@@ -153,7 +154,7 @@ impl Player {
                     rng.gen_range(0, 10),
                     rng.gen_range(0, 10)
                 ];
-                if self.get_space_state(&space) == Some(0) {
+                if self.space_is_unchecked(&space) {
                     pos = Some(space);
                 }
             }
@@ -290,16 +291,20 @@ impl Player {
         result
     }
 
-    /// Gets the current state of a space, if that space actually exists.
-    pub fn get_space_state(&self, pos: &[u8; 2]) -> Option<u8> {
-        let space_state: Option<u8>;
-        if let Some(i) = self.spaces.iter().position(|space| &space.position == pos) {
-            space_state = Some(self.spaces[i].state);
-        } else {
-            space_state = None;
+    /// Returns the current state of a space, if that space exists.
+    fn space_state(&self, pos: &[u8; 2]) -> Option<SpaceState> {
+        match self.spaces.iter().find(|s| &s.position == pos) {
+            Some(space) => Some(space.state),
+            None => None
         }
+    }
 
-        space_state
+    pub fn space_is_unchecked(&self, pos: &[u8; 2]) -> bool {
+        self.space_state(&pos) == Some(SpaceState::Unchecked)
+    }
+
+    pub fn space_is_hit(&self, pos: &[u8; 2]) -> bool {
+        self.space_state(&pos) == Some(SpaceState::Checked(true))
     }
 
     /// Returns the coordinates of the player's grid cursor.
@@ -342,7 +347,13 @@ pub enum ShipDirection {
 }
 
 pub struct Space {
-    pub state: u8,
+    pub state: SpaceState,
     pub position: [u8; 2],
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum SpaceState {
+    Unchecked,
+    Checked(bool)
 }
 
