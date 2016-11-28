@@ -30,43 +30,23 @@ impl Player {
     /// Selects a space and checks the status of ships if there's a hit.
     pub fn select_space(&mut self, pos: &[u8; 2]) -> GameState {
         let mut game_state = GameState::Active;
-        let mut space_state = SpaceState::Checked(false);
-        let mut hit_ship = None;
-        for (i, ship) in self.ships.iter().enumerate() {
-            if ship.position.contains(pos) {
-                space_state = SpaceState::Checked(true);
-                hit_ship = Some(i);
-            }
-        }
+        let ship_hit = self.ships.iter().position(|s| s.position.contains(pos));
+        let space_state = SpaceState::Checked(ship_hit.is_some());
 
         let space = self.spaces.iter()
             .position(|space| &space.position == pos)
             .unwrap();
         self.spaces[space].state = space_state;
 
-        if space_state == SpaceState::Checked(true) {
-            // Check if this ship has sunk.
-            let hit_ship = hit_ship.unwrap();
-            let mut ship_state = false;
-            for ship_pos in &self.ships[hit_ship].position {
-                if self.space_is_unchecked(&ship_pos) {
-                    ship_state = true;
-                }
+        if let Some(ship) = ship_hit {
+            let ship_sunk = self.ships[ship].position.iter()
+                .all(|p| self.space_is_hit(p));
+
+            if ship_sunk {
+                self.ships[ship].state = false;
             }
 
-            if !ship_state {
-                self.ships[hit_ship].state = ship_state;
-            }
-
-            // Check if any ships are left.
-            let mut all_sunk = true;
-            for ship in &self.ships {
-                if ship.state {
-                    all_sunk = false;
-                    break;
-                }
-            }
-
+            let all_sunk = self.ships.iter().all(|s| !s.state);
             if all_sunk {
                 game_state = GameState::Over;
             }
@@ -92,18 +72,11 @@ impl Player {
         rng.shuffle(&mut directions);
 
         for space in self.spaces.iter().filter(|s| s.state == SpaceState::Checked(true)) {
+            let hit_ship = self.ships.iter()
+                .find(|s| s.position.contains(&space.position))
+                .unwrap();
 
-            // Get the hit ship.
-            let mut ship: Option<&Ship> = None;
-            for s in &self.ships {
-                if s.position.contains(&space.position) {
-                    ship = Some(s);
-                    break;
-                }
-            }
-
-            // Make sure the hit ship hasn't been sunk.
-            if ship.unwrap().state {
+            if hit_ship.state {
                 if first_hit.is_none() {
                     first_hit = Some(space.position);
                 }
@@ -223,42 +196,19 @@ impl Player {
         ship
     }
 
-    /// Checks that the selected ship position is valid before placing it.
+    /// Checks that the given ship position is valid.
+    ///
+    /// If the player is CPU-controlled, a ship in a space next to another ship
+    /// will be considered invalid.
     pub fn valid_ship_position(&self, new_ship: &Vec<[u8; 2]>) -> bool {
-        let mut valid = true;
-
-        for space in new_ship {
-            // Make sure all ship spaces are within the grid.
-            if space[0] > 9 || space[1] > 9 {
-                valid = false;
-            }
-
-            // Make sure a ship isn't already in this space.
-            if valid {
-                valid = !self.ship_is_in_space(&space);
-            }
-
-            // CPU players are disallowed from placing ships together, because
-            // it's just bad strategy.  Human players should still be allowed
-            // to do what they want, though.
-            if valid && self.is_cpu {
-                valid = !self.ship_is_next_to(&space);
-            }
-        }
-
-        valid
+        new_ship.iter()
+            .all(|s| self.valid_space(s) && !self.ship_is_in_space(s)
+                 && !(self.ship_is_next_to(s) && self.is_cpu))
     }
 
     /// Checks whether a ship occupies the specified grid coordinates.
     pub fn ship_is_in_space(&self, pos: &[u8; 2]) -> bool {
-        let mut result = false;
-        for ship in &self.ships {
-            if ship.position.contains(pos) {
-                result = true;
-            }
-        }
-
-        result
+        self.ships.iter().any(|s| s.position.contains(pos))
     }
 
     /// Checks whether there is a ship next to the specified grid coordinates.
@@ -284,6 +234,10 @@ impl Player {
         }
 
         result
+    }
+
+    fn valid_space(&self, pos: &[u8; 2]) -> bool {
+        pos[0] < 10 && pos[1] < 10
     }
 
     /// Returns the current state of a space, if that space exists.
