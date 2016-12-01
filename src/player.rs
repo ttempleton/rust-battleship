@@ -1,25 +1,28 @@
 use rand::{Rng, thread_rng};
 use app::GameState;
+use settings::Settings;
 use ship::{Ship, ShipDirection};
 use space::{Space, SpaceState};
 
-pub struct Player {
+pub struct Player<'a> {
+    settings: &'a Settings,
     pub is_cpu: bool,
     pub spaces: Vec<Space>,
     pub ships: Vec<Ship>,
     grid_cursor: [u8; 2],
 }
 
-impl Player {
-    pub fn new(is_cpu: bool) -> Player {
+impl<'a> Player<'a> {
+    pub fn new(settings: &Settings, is_cpu: bool) -> Player {
         let mut spaces = vec![];
-        for col in 0..10 {
-            for row in 0..10 {
+        for col in 0..settings.spaces_x {
+            for row in 0..settings.spaces_y {
                 spaces.push(Space::new([col, row]));
             }
         }
 
         Player {
+            settings: &settings,
             is_cpu: is_cpu,
             spaces: spaces,
             ships: vec![],
@@ -123,8 +126,8 @@ impl Player {
             let mut pos: Option<[u8; 2]> = None;
             while pos.is_none() {
                 let space = [
-                    rng.gen_range(0, 10),
-                    rng.gen_range(0, 10)
+                    rng.gen_range(0, self.settings.spaces_x),
+                    rng.gen_range(0, self.settings.spaces_y)
                 ];
                 if self.space_is_unchecked(&space) {
                     pos = Some(space);
@@ -163,8 +166,8 @@ impl Player {
 
         // RNG a position and direction, then make sure it's valid.
         while !valid {
-            x = rng.gen_range(0, 10);
-            y = rng.gen_range(0, 10);
+            x = rng.gen_range(0, self.settings.spaces_x);
+            y = rng.gen_range(0, self.settings.spaces_y);
             direction = match rng.gen_range(0, 2) {
                 0 => ShipDirection::Horizontal,
                 1 => ShipDirection::Vertical,
@@ -221,7 +224,7 @@ impl Player {
             result = self.ship_is_in_space(&[x - 1, y]);
         }
         // Right
-        if x < 9 && !result {
+        if x < self.settings.spaces_x - 1 && !result {
             result = self.ship_is_in_space(&[x + 1, y]);
         }
         // Above
@@ -229,7 +232,7 @@ impl Player {
             result = self.ship_is_in_space(&[x, y - 1]);
         }
         // Below
-        if y < 9 && !result {
+        if y < self.settings.spaces_y - 1 && !result {
             result = self.ship_is_in_space(&[x, y + 1]);
         }
 
@@ -237,7 +240,7 @@ impl Player {
     }
 
     fn valid_space(&self, pos: &[u8; 2]) -> bool {
-        pos[0] < 10 && pos[1] < 10
+        pos[0] < self.settings.spaces_x && pos[1] < self.settings.spaces_y
     }
 
     /// Returns the current state of a space, if that space exists.
@@ -269,12 +272,9 @@ impl Player {
             self.grid_cursor[1] as i32 + direction[1]
         ];
 
-        if new_cursor[0] >= 0 && new_cursor[0] < 10
-            && new_cursor[1] >= 0 && new_cursor[1] < 10 {
-            self.set_grid_cursor(&[
-                new_cursor[0] as u8,
-                new_cursor[1] as u8
-            ]);
+        if new_cursor[0] >= 0 && new_cursor[1] >= 0
+            && self.valid_space(&[new_cursor[0] as u8, new_cursor[1] as u8]) {
+            self.set_grid_cursor(&[new_cursor[0] as u8, new_cursor[1] as u8]);
         }
     }
 

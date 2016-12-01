@@ -26,11 +26,13 @@ fn assets_dir(mut dir: PathBuf) -> Result<PathBuf, &'static str> {
 }
 
 fn main() {
-    let space_size = 20;
-    let spaces_x = 10;
-    let spaces_y = 10;
+    let settings = settings::Settings {
+        space_size: 20,
+        spaces_x: 10,
+        spaces_y: 10
+    };
 
-    let mut app = app::App::new(space_size, spaces_x, spaces_y);
+    let mut app = app::App::new(&settings);
 
     let window_title = "Battleship";
     let mut window: PistonWindow = WindowSettings::new(
@@ -149,7 +151,7 @@ fn main() {
                 for (i, ship) in shown_player.ships.iter().enumerate() {
                     if ship.state {
                         let transform = c.transform.trans(
-                            (app.settings.space_size as u32 * 2 * i as u32 + app.grid_area[0] * 2) as f64,
+                            (settings.space_size as u32 * 2 * i as u32 + app.grid_area[0] * 2) as f64,
                             30.0 as f64,
                         );
                         image(&ship_textures[i], transform, g);
@@ -159,8 +161,8 @@ fn main() {
                 // Grid spaces
                 for space in &shown_player.spaces {
                     let transform = c.transform.trans(
-                        (app.settings.space_size as u32 * space.position[0] as u32 + app.grid_area[0]) as f64,
-                        (app.settings.space_size as u32 * space.position[1] as u32 + app.grid_area[1]) as f64,
+                        (settings.space_size as u32 * space.position[0] as u32 + app.grid_area[0]) as f64,
+                        (settings.space_size as u32 * space.position[1] as u32 + app.grid_area[1]) as f64,
                     );
 
                     // Only show ship locations during ship placement or if the
@@ -182,8 +184,8 @@ fn main() {
                 if app.state == GameState::ShipPlacement {
                     for temp_ship in &app.ship_temp_pos {
                         let transform = c.transform.trans(
-                            (app.settings.space_size as u32 * temp_ship[0] as u32 + app.grid_area[0]) as f64,
-                            (app.settings.space_size as u32 * temp_ship[1] as u32 + app.grid_area[1]) as f64,
+                            (settings.space_size as u32 * temp_ship[0] as u32 + app.grid_area[0]) as f64,
+                            (settings.space_size as u32 * temp_ship[1] as u32 + app.grid_area[1]) as f64,
                         );
                         image(&space_textures[3], transform, g);
                     }
@@ -193,8 +195,8 @@ fn main() {
                 if app.state == GameState::Active && app.turn_end_timer == 0.0 && !current_player.is_cpu {
                     let grid_cursor = current_player.get_grid_cursor();
                     let transform = c.transform.trans(
-                        (app.settings.space_size * grid_cursor[0] as u32 + app.grid_area[0]) as f64,
-                        (app.settings.space_size * grid_cursor[1] as u32 + app.grid_area[1]) as f64,
+                        (settings.space_size * grid_cursor[0] as u32 + app.grid_area[0]) as f64,
+                        (settings.space_size * grid_cursor[1] as u32 + app.grid_area[1]) as f64,
                     );
                     image(&grid_cursor_texture, transform, g);
                 }

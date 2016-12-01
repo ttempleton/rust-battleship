@@ -4,9 +4,9 @@ use player::Player;
 use settings::Settings;
 use ship::{Ship, ShipDirection};
 
-pub struct App {
-    pub settings: Settings,
-    players: [Player; 2],
+pub struct App<'a> {
+    pub settings: &'a Settings,
+    players: [Player<'a>; 2],
     pub state: GameState,
     turn: u8,
     pub turn_active: bool,
@@ -20,27 +20,26 @@ pub struct App {
     ship_temp_dir: ShipDirection,
 }
 
-impl App {
-    pub fn new(space_size: u32, width: u8, height: u8) -> App {
+impl<'a> App<'a> {
+    pub fn new(settings: &Settings) -> App {
         let grid_area = [
-            space_size,
-            space_size * 3,
-            width as u32 * space_size,
-            height as u32 * space_size
+            settings.space_size,
+            settings.space_size * 3,
+            settings.spaces_x as u32 * settings.space_size,
+            settings.spaces_y as u32 * settings.space_size
         ];
 
         let window_size = [
-            grid_area[2] + space_size * 2,
-            grid_area[3] + space_size * 4
+            grid_area[2] + settings.space_size * 2,
+            grid_area[3] + settings.space_size * 4
         ];
 
         App {
-            settings: Settings {
-                space_size: space_size,
-                width: width,
-                height: height,
-            },
-            players: [Player::new(false), Player::new(true)],
+            settings: &settings,
+            players: [
+                Player::new(&settings, false),
+                Player::new(&settings, true)
+            ],
             state: GameState::ShipPlacement,
             turn: 0,
             turn_active: true,
