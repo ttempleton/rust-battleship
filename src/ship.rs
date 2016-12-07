@@ -12,9 +12,11 @@ impl Ship {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum ShipDirection {
-    Horizontal,
-    Vertical,
+    North,
+    East,
+    South,
+    West,
 }
 

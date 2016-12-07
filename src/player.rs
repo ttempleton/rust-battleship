@@ -168,35 +168,63 @@ impl<'a> Player<'a> {
         while !valid {
             x = rng.gen_range(0, self.settings.spaces_x);
             y = rng.gen_range(0, self.settings.spaces_y);
-            direction = match rng.gen_range(0, 2) {
-                0 => ShipDirection::Horizontal,
-                1 => ShipDirection::Vertical,
+            direction = match rng.gen_range(0, 4) {
+                0 => ShipDirection::North,
+                1 => ShipDirection::East,
+                2 => ShipDirection::South,
+                3 => ShipDirection::West,
                 _ => unreachable!()
             };
-            ship = self.get_ship_position([x, y], direction, length);
-            valid = self.valid_ship_position(&ship);
+
+            if let Some(s) = self.get_ship_position([x, y], direction, length) {
+                valid = self.valid_ship_position(&s);
+
+                if valid {
+                    ship = s;
+                }
+            }
         }
 
         ship
     }
 
-    /// Returns a ship's grid positions, given its head position, direction and
-    /// length.
+    /// Returns a ship position, given its head position, direction and length.
+    ///
+    /// `direction` refers to the direction the ship is facing, not the
+    /// direction in which positions are generated.
+    /// Returns `None` if the resulting ship position would not be contained
+    /// within the grid.
     pub fn get_ship_position(
         &self,
         head: [u8; 2],
         direction: ShipDirection,
         length: u8
-    ) -> Vec<[u8; 2]> {
-        let mut ship = vec![head];
-        for pos in 1..length {
-            match direction {
-                ShipDirection::Horizontal => ship.push([head[0] + pos as u8, head[1]]),
-                ShipDirection::Vertical => ship.push([head[0], head[1] + pos as u8])
-            }
-        }
+    ) -> Option<Vec<[u8; 2]>> {
+        let valid = match direction {
+            ShipDirection::North => head[1] >= length - 1,
+            ShipDirection::East => head[0] + length <= self.settings.spaces_x,
+            ShipDirection::South => head[1] + length <= self.settings.spaces_y,
+            ShipDirection::West => head[0] >= length - 1,
+        };
 
-        ship
+        let ship_opt = if valid {
+            let mut ship = vec![head];
+            for pos in 1..length {
+                let pos_u8 = pos as u8;
+                let space = match direction {
+                    ShipDirection::North => [head[0], head[1] - pos_u8],
+                    ShipDirection::East => [head[0] + pos_u8, head[1]],
+                    ShipDirection::South => [head[0], head[1] + pos_u8],
+                    ShipDirection::West => [head[0] - pos_u8, head[1]],
+                };
+                ship.push(space);
+            }
+            Some(ship)
+        } else {
+            None
+        };
+
+        ship_opt
     }
 
     /// Checks that the given ship position is valid.

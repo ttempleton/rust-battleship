@@ -50,7 +50,7 @@ impl<'a> App<'a> {
             window_size: window_size,
             mouse_cursor: [0.0; 2],
             ship_temp_pos: vec![[0, 0], [1, 0]],
-            ship_temp_dir: ShipDirection::Horizontal,
+            ship_temp_dir: ShipDirection::East,
         }
     }
 
@@ -201,29 +201,21 @@ impl<'a> App<'a> {
 
     /// Processes right mouse clicks according to the current program state.
     pub fn mouse_right_click(&mut self) {
-        if self.state == GameState::ShipPlacement {
-
-            // State 0: rotate ships.
-            // TODO: rotate ship function with direction parameter
-            let mut new_ship_pos = vec![self.ship_temp_pos[0]];
-            match self.ship_temp_dir {
-                ShipDirection::Horizontal => {
-                    self.ship_temp_dir = ShipDirection::Vertical;
-                    let length = self.players[self.turn as usize].ships.len() + 2;
-                    for pos in 1..length {
-                        new_ship_pos.push([self.ship_temp_pos[0][0], self.ship_temp_pos[0][1] + pos as u8]);
-                    }
-                },
-                ShipDirection::Vertical => {
-                    self.ship_temp_dir = ShipDirection::Horizontal;
-                    let length = self.players[self.turn as usize].ships.len() + 2;
-                    for pos in 1..length {
-                        new_ship_pos.push([self.ship_temp_pos[0][0] + pos as u8, self.ship_temp_pos[0][1]]);
-                    }
-                },
+        if self.state == GameState::ShipPlacement && self.is_player_turn() {
+            let direction = match self.ship_temp_dir {
+                ShipDirection::North => ShipDirection::East,
+                ShipDirection::East => ShipDirection::South,
+                ShipDirection::South => ShipDirection::West,
+                ShipDirection::West => ShipDirection::North,
+            };
+            if let Some(ship) = self.players[self.turn as usize].get_ship_position(
+                self.ship_temp_pos[0],
+                direction,
+                self.ship_temp_pos.len() as u8
+            ) {
+                self.ship_temp_pos = ship;
+                self.ship_temp_dir = direction;
             }
-
-            self.ship_temp_pos = new_ship_pos;
         }
     }
 
@@ -236,11 +228,13 @@ impl<'a> App<'a> {
             let ref mut player = self.players[self.turn as usize];
 
             if self.state == GameState::ShipPlacement {
-                self.ship_temp_pos = player.get_ship_position(
+                if let Some(ship) = player.get_ship_position(
                     grid_pos,
                     self.ship_temp_dir,
                     player.ships.len() as u8 + 2
-                );
+                ) {
+                    self.ship_temp_pos = ship;
+                }
             }
 
             if self.state == GameState::Active && is_player_turn {
