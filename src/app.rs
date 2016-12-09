@@ -50,7 +50,7 @@ impl<'a> App<'a> {
             window_size: window_size,
             mouse_cursor: [0.0; 2],
             ship_temp_pos: vec![[0, 0], [1, 0]],
-            ship_temp_dir: ShipDirection::East,
+            ship_temp_dir: ShipDirection::West,
         }
     }
 

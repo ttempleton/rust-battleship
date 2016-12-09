@@ -201,10 +201,10 @@ impl<'a> Player<'a> {
         length: u8
     ) -> Option<Vec<[u8; 2]>> {
         let valid = match direction {
-            ShipDirection::North => head[1] >= length - 1,
-            ShipDirection::East => head[0] + length <= self.settings.spaces_x,
-            ShipDirection::South => head[1] + length <= self.settings.spaces_y,
-            ShipDirection::West => head[0] >= length - 1,
+            ShipDirection::North => head[1] + length <= self.settings.spaces_y,
+            ShipDirection::East => head[0] >= length - 1,
+            ShipDirection::South => head[1] >= length - 1,
+            ShipDirection::West => head[0] + length <= self.settings.spaces_x,
         };
 
         let ship_opt = if valid {
@@ -212,10 +212,10 @@ impl<'a> Player<'a> {
             for pos in 1..length {
                 let pos_u8 = pos as u8;
                 let space = match direction {
-                    ShipDirection::North => [head[0], head[1] - pos_u8],
-                    ShipDirection::East => [head[0] + pos_u8, head[1]],
-                    ShipDirection::South => [head[0], head[1] + pos_u8],
-                    ShipDirection::West => [head[0] - pos_u8, head[1]],
+                    ShipDirection::North => [head[0], head[1] + pos_u8],
+                    ShipDirection::East => [head[0] - pos_u8, head[1]],
+                    ShipDirection::South => [head[0], head[1] - pos_u8],
+                    ShipDirection::West => [head[0] + pos_u8, head[1]],
                 };
                 ship.push(space);
             }
