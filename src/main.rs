@@ -119,12 +119,13 @@ fn main() {
         if let Some(p) = e.press_args() {
             match p {
                 Button::Mouse(mouse::MouseButton::Left) => app.mouse_left_click(),
-                Button::Mouse(mouse::MouseButton::Right) => app.mouse_right_click(),
+                Button::Mouse(mouse::MouseButton::Right) => app.button_secondary(),
                 Button::Keyboard(keyboard::Key::Left) => app.button_left(),
                 Button::Keyboard(keyboard::Key::Right) => app.button_right(),
                 Button::Keyboard(keyboard::Key::Up) => app.button_up(),
                 Button::Keyboard(keyboard::Key::Down) => app.button_down(),
                 Button::Keyboard(keyboard::Key::Return) => app.button_primary(),
+                Button::Keyboard(keyboard::Key::Space) => app.button_secondary(),
                 _ => {}
             }
         }

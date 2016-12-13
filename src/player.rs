@@ -292,17 +292,33 @@ impl<'a> Player<'a> {
         self.grid_cursor.clone()
     }
 
-    /// Moves the player's grid cursor in a `direction` relative to the current
-    /// grid cursor coordinates.
-    pub fn move_grid_cursor(&mut self, direction: [i32; 2]) {
-        let new_cursor = [
-            self.grid_cursor[0] as i32 + direction[0],
-            self.grid_cursor[1] as i32 + direction[1]
-        ];
+    /// Returns the coordinates of a movement from `pos` in a `direction`.
+    /// Returns `None` if the movement is not possible.
+    pub fn movement(&self, pos: &[u8; 2], direction: ShipDirection) -> Option<[u8; 2]> {
+        let valid = match direction {
+            ShipDirection::North => pos[1] > 0,
+            ShipDirection::East => pos[0] < self.settings.spaces_x - 1,
+            ShipDirection::South => pos[1] < self.settings.spaces_y - 1,
+            ShipDirection::West => pos[0] > 0,
+        };
 
-        if new_cursor[0] >= 0 && new_cursor[1] >= 0
-            && self.valid_space(&[new_cursor[0] as u8, new_cursor[1] as u8]) {
-            self.set_grid_cursor(&[new_cursor[0] as u8, new_cursor[1] as u8]);
+        if valid {
+            let movement = match direction {
+                ShipDirection::North => [pos[0], pos[1] - 1],
+                ShipDirection::East => [pos[0] + 1, pos[1]],
+                ShipDirection::South => [pos[0], pos[1] + 1],
+                ShipDirection::West => [pos[0] - 1, pos[1]],
+            };
+            Some(movement)
+        } else {
+            None
+        }
+    }
+
+    /// Moves the player's grid cursor in the given `direction` if possible.
+    pub fn move_grid_cursor(&mut self, direction: ShipDirection) {
+        if let Some(new_cursor) = self.movement(&self.grid_cursor, direction) {
+            self.set_grid_cursor(&new_cursor);
         }
     }
 
