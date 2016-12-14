@@ -10,6 +10,8 @@ pub struct Player<'a> {
     pub spaces: Vec<Space>,
     pub ships: Vec<Ship>,
     grid_cursor: [u8; 2],
+    pub temp_ship_pos: Vec<[u8; 2]>,
+    pub temp_ship_dir: ShipDirection,
 }
 
 impl<'a> Player<'a> {
@@ -27,6 +29,8 @@ impl<'a> Player<'a> {
             spaces: spaces,
             ships: vec![],
             grid_cursor: [0, 0],
+            temp_ship_pos: vec![[0, 0], [1, 0]],
+            temp_ship_dir: ShipDirection::West,
         }
     }
 
@@ -146,6 +150,52 @@ impl<'a> Player<'a> {
         }
 
         select[0]
+    }
+
+    pub fn move_temp_ship(&mut self, direction: ShipDirection) {
+        let old_head = self.temp_ship_pos[0];
+        if let Some(new_head) = self.movement(&old_head, direction) {
+
+            if let Some(ship) = self.get_ship_position(
+                new_head,
+                self.temp_ship_dir,
+                self.temp_ship_pos.len() as u8
+            ) {
+                self.temp_ship_pos = ship;
+            }
+        }
+    }
+
+    pub fn place_temp_ship(&mut self) {
+        let ship = self.temp_ship_pos.clone();
+
+        if self.valid_ship_position(&ship) {
+            self.ships.push(Ship::new(ship));
+
+            self.temp_ship_dir = ShipDirection::West;
+            self.temp_ship_pos = self.get_ship_position(
+                [0, 0],
+                self.temp_ship_dir,
+                self.temp_ship_pos.len() as u8 + 1
+            ).unwrap();
+        }
+    }
+
+    pub fn rotate_temp_ship(&mut self) {
+        let direction = match self.temp_ship_dir {
+            ShipDirection::North => ShipDirection::East,
+            ShipDirection::East => ShipDirection::South,
+            ShipDirection::South => ShipDirection::West,
+            ShipDirection::West => ShipDirection::North,
+        };
+        if let Some(ship) = self.get_ship_position(
+            self.temp_ship_pos[0],
+            direction,
+            self.temp_ship_pos.len() as u8
+        ) {
+            self.temp_ship_pos = ship;
+            self.temp_ship_dir = direction;
+        }
     }
 
     pub fn cpu_place_ships(&mut self) {

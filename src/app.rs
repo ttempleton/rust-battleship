@@ -2,7 +2,7 @@ use piston_window::UpdateArgs;
 
 use player::Player;
 use settings::Settings;
-use ship::{Ship, ShipDirection};
+use ship::ShipDirection;
 
 pub struct App<'a> {
     pub settings: &'a Settings,
@@ -16,8 +16,6 @@ pub struct App<'a> {
     pub grid_area: [u32; 4],
     pub window_size: [u32; 2],
     mouse_cursor: [f64; 2],
-    pub ship_temp_pos: Vec<[u8; 2]>,
-    ship_temp_dir: ShipDirection,
 }
 
 impl<'a> App<'a> {
@@ -49,8 +47,6 @@ impl<'a> App<'a> {
             grid_area: grid_area,
             window_size: window_size,
             mouse_cursor: [0.0; 2],
-            ship_temp_pos: vec![[0, 0], [1, 0]],
-            ship_temp_dir: ShipDirection::West,
         }
     }
 
@@ -137,36 +133,6 @@ impl<'a> App<'a> {
         }
     }
 
-    fn move_temp_ship(&mut self, direction: ShipDirection) {
-        let old_head = self.ship_temp_pos[0];
-        if let Some(new_head) = self.players[self.turn as usize].movement(&old_head, direction) {
-
-            if let Some(ship) = self.players[self.turn as usize].get_ship_position(
-                new_head,
-                self.ship_temp_dir,
-                self.ship_temp_pos.len() as u8
-            ) {
-                self.ship_temp_pos = ship;
-            }
-        }
-    }
-
-    fn place_temp_ship(&mut self) {
-        let ref mut player = self.players[self.turn as usize];
-        let ship = self.ship_temp_pos.clone();
-
-        if player.valid_ship_position(&ship) {
-            player.ships.push(Ship::new(ship));
-
-            self.ship_temp_dir = ShipDirection::West;
-            self.ship_temp_pos = player.get_ship_position(
-                [0, 0],
-                self.ship_temp_dir,
-                self.ship_temp_pos.len() as u8 + 1
-            ).unwrap();
-        }
-    }
-
     /// Selects `grid_pos` on the opponent's grid if it is unchecked.
     fn select_opponent_space(&mut self, grid_pos: &[u8; 2]) {
         let ref mut opponent = self.players[self.not_turn()];
@@ -179,7 +145,7 @@ impl<'a> App<'a> {
     /// Processes left button presses according to the current program state.
     pub fn button_left(&mut self) {
         if self.state == GameState::ShipPlacement && self.is_player_turn() {
-            self.move_temp_ship(ShipDirection::West);
+            self.players[self.turn as usize].move_temp_ship(ShipDirection::West);
         }
 
         if self.state == GameState::Active && self.is_player_turn() {
@@ -190,7 +156,7 @@ impl<'a> App<'a> {
     /// Processes right button presses according to the current program state.
     pub fn button_right(&mut self) {
         if self.state == GameState::ShipPlacement && self.is_player_turn() {
-            self.move_temp_ship(ShipDirection::East);
+            self.players[self.turn as usize].move_temp_ship(ShipDirection::East);
         }
 
         if self.state == GameState::Active && self.is_player_turn() {
@@ -201,7 +167,7 @@ impl<'a> App<'a> {
     /// Processes up button presses according to the current program state.
     pub fn button_up(&mut self) {
         if self.state == GameState::ShipPlacement && self.is_player_turn() {
-            self.move_temp_ship(ShipDirection::North);
+            self.players[self.turn as usize].move_temp_ship(ShipDirection::North);
         }
 
         if self.state == GameState::Active && self.is_player_turn() {
@@ -212,7 +178,7 @@ impl<'a> App<'a> {
     /// Processes down button presses according to the current program state.
     pub fn button_down(&mut self) {
         if self.state == GameState::ShipPlacement && self.is_player_turn() {
-            self.move_temp_ship(ShipDirection::South);
+            self.players[self.turn as usize].move_temp_ship(ShipDirection::South);
         }
 
         if self.state == GameState::Active && self.is_player_turn() {
@@ -223,7 +189,7 @@ impl<'a> App<'a> {
     /// Processes primary button presses according to the current program state.
     pub fn button_primary(&mut self) {
         if self.state == GameState::ShipPlacement && self.is_player_turn() {
-            self.place_temp_ship();
+            self.players[self.turn as usize].place_temp_ship();
         }
 
         if self.state == GameState::Active && self.is_player_turn() {
@@ -235,20 +201,7 @@ impl<'a> App<'a> {
     /// Processes secondary button presses according to the current program state.
     pub fn button_secondary(&mut self) {
         if self.state == GameState::ShipPlacement && self.is_player_turn() {
-            let direction = match self.ship_temp_dir {
-                ShipDirection::North => ShipDirection::East,
-                ShipDirection::East => ShipDirection::South,
-                ShipDirection::South => ShipDirection::West,
-                ShipDirection::West => ShipDirection::North,
-            };
-            if let Some(ship) = self.players[self.turn as usize].get_ship_position(
-                self.ship_temp_pos[0],
-                direction,
-                self.ship_temp_pos.len() as u8
-            ) {
-                self.ship_temp_pos = ship;
-                self.ship_temp_dir = direction;
-            }
+            self.players[self.turn as usize].rotate_temp_ship();
         }
     }
 
@@ -256,7 +209,7 @@ impl<'a> App<'a> {
     pub fn mouse_left_click(&mut self) {
         if let Some(grid_pos) = self.mouse_cursor_grid_position() {
             if self.state == GameState::ShipPlacement && self.is_player_turn() {
-                self.place_temp_ship();
+                self.players[self.turn as usize].place_temp_ship();
             }
 
             if self.state == GameState::Active && self.is_player_turn() {
@@ -276,10 +229,10 @@ impl<'a> App<'a> {
             if self.state == GameState::ShipPlacement {
                 if let Some(ship) = player.get_ship_position(
                     grid_pos,
-                    self.ship_temp_dir,
+                    player.temp_ship_dir,
                     player.ships.len() as u8 + 2
                 ) {
-                    self.ship_temp_pos = ship;
+                    player.temp_ship_pos = ship;
                 }
             }
 

@@ -183,10 +183,10 @@ fn main() {
                 // During ship placement, show the temporary position of the
                 // next ship to be placed.
                 if app.state == GameState::ShipPlacement {
-                    for temp_ship in &app.ship_temp_pos {
+                    for pos in &shown_player.temp_ship_pos {
                         let transform = c.transform.trans(
-                            (settings.space_size as u32 * temp_ship[0] as u32 + app.grid_area[0]) as f64,
-                            (settings.space_size as u32 * temp_ship[1] as u32 + app.grid_area[1]) as f64,
+                            (settings.space_size as u32 * pos[0] as u32 + app.grid_area[0]) as f64,
+                            (settings.space_size as u32 * pos[1] as u32 + app.grid_area[1]) as f64,
                         );
                         image(&space_textures[3], transform, g);
                     }
