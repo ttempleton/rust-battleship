@@ -65,68 +65,55 @@ impl<'a> Player<'a> {
     /// Determines the next space a CPU player will select.
     pub fn cpu_select_space(&mut self) -> [u8; 2] {
         let mut rng = thread_rng();
-        let mut first_hit = None;
-        let mut select = vec![];
+        let mut select = Vec::new();
 
-        // Determines the order of priority of directions to check if there are
-        // any hit spaces found.
-        let mut directions: [[i32; 2]; 4] = [
-            [-1, 0],
-            [1, 0],
-            [0, -1],
-            [0, 1]
+        let mut directions = [
+            ShipDirection::North,
+            ShipDirection::East,
+            ShipDirection::South,
+            ShipDirection::West
         ];
         rng.shuffle(&mut directions);
 
-        for space in self.spaces.iter().filter(|s| s.state == SpaceState::Checked(true)) {
-            let hit_ship = self.ships.iter()
-                .find(|s| s.position.contains(&space.position))
-                .unwrap();
+        let mut hit_spaces = self.spaces.iter()
+            .filter(|s| s.state == SpaceState::Checked(true))
+            .filter(|s| self.ship_in_space(&s.position).unwrap().state)
+            .collect::<Vec<&Space>>();
+        rng.shuffle(&mut hit_spaces);
 
-            if hit_ship.state {
-                if first_hit.is_none() {
-                    first_hit = Some(space.position);
-                }
-
-                // Check if this space forms part of a line of hit spaces.  If
-                // it does, and the space at the end hasn't been selected yet,
-                // it's a candidate for selection this turn.
-                for check in &directions {
-                    let mut xc = (space.position[0] as i32 + check[0]) as u8;
-                    let mut yc = (space.position[1] as i32 + check[1]) as u8;
-
-                    while self.space_is_hit(&[xc, yc]) {
-                        xc = (xc as i32 + check[0]) as u8;
-                        yc = (yc as i32 + check[1]) as u8;
-                    }
-
-                    if self.space_is_unchecked(&[xc, yc]) && ((xc as i32 - check[0]) as u8 != space.position[0] || (yc as i32 - check[1]) as u8 != space.position[1]) {
-                        select.push([xc, yc]);
-                        break;
+        // Check for a line of hit spaces.
+        for space in &hit_spaces {
+            for direction in &directions {
+                let unchecked = self.find_unchecked_space(
+                    &space.position,
+                    *direction,
+                    true
+                );
+                if let Some(pos) = unchecked {
+                    if !select.contains(&pos) {
+                        select.push(pos);
                     }
                 }
             }
         }
 
-        // If a hit space was found, but no hit spaces next to it, select a
-        // non-selected space next to it.
-        if first_hit.is_some() && select.len() == 0 {
-            let first_hit = first_hit.unwrap();
-            let first_hit_i32 = [first_hit[0] as i32, first_hit[1] as i32];
-            for check in &directions {
-                let pos = [
-                    (first_hit_i32[0] + check[0]) as u8,
-                    (first_hit_i32[1] + check[1]) as u8
-                ];
-                if self.space_is_unchecked(&pos) {
+        // If a hit space was found, but no hit spaces next to it, find any
+        // unchecked spaces next to it.
+        if hit_spaces.len() > 0 && select.is_empty() {
+            for direction in &directions {
+                let unchecked = self.find_unchecked_space(
+                    &hit_spaces[0].position,
+                    *direction,
+                    false
+                );
+                if let Some(pos) = unchecked {
                     select.push(pos);
-                    break;
                 }
             }
         }
 
-        // If no spaces were selected to check, just check any available space.
-        if select.len() == 0 {
+        // If no spaces have been selected, just select any available space.
+        if select.is_empty() {
             let mut pos: Option<[u8; 2]> = None;
             while pos.is_none() {
                 let space = [
@@ -141,11 +128,7 @@ impl<'a> Player<'a> {
             select.push(pos.unwrap());
         }
 
-        // The way the potential selections are chosen, empty spaces to the
-        // right or bottom of a line of hit spaces will always be chosen first,
-        // so the list of selections should be shuffled.
         if select.len() > 1 {
-            select.dedup();
             rng.shuffle(&mut select);
         }
 
@@ -287,6 +270,11 @@ impl<'a> Player<'a> {
                  && !(self.ship_is_next_to(s) && self.is_cpu))
     }
 
+    /// Gets a reference to a ship if it is in the given position.
+    fn ship_in_space(&self, pos: &[u8; 2]) -> Option<&Ship> {
+        self.ships.iter().find(|s| s.position.contains(pos))
+    }
+
     /// Checks whether a ship occupies the specified grid coordinates.
     pub fn ship_is_in_space(&self, pos: &[u8; 2]) -> bool {
         self.ships.iter().any(|s| s.position.contains(pos))
@@ -363,6 +351,42 @@ impl<'a> Player<'a> {
         } else {
             None
         }
+    }
+
+    /// Finds the first non-hit, unchecked space in a `direction` from `pos`.
+    /// Can also make sure the space is at the end of a `line` of hit spaces.
+    /// Returns `None` if the first non-hit space has been checked or if a grid
+    /// boundary is reached.
+    fn find_unchecked_space(
+        &self,
+        pos: &[u8; 2],
+        direction: ShipDirection,
+        check_for_line: bool
+    ) -> Option<[u8; 2]> {
+        let mut check_pos = self.movement(pos, direction);
+
+        while let Some(next_pos) = check_pos {
+            match self.space_is_hit(&next_pos) {
+                true => check_pos = self.movement(&next_pos, direction),
+                false => {
+                    if !self.space_is_unchecked(&next_pos) {
+                        check_pos = None;
+                    }
+                    break;
+                }
+            };
+        }
+
+        if check_for_line && check_pos.is_some() {
+            let unchecked = check_pos.unwrap();
+            let opposite_dir = direction.opposite();
+            let prev_pos = self.movement(&unchecked, opposite_dir).unwrap();
+            if &prev_pos == pos {
+                check_pos = None;
+            }
+        }
+
+        check_pos
     }
 
     /// Moves the player's grid cursor in the given `direction` if possible.

@@ -20,3 +20,14 @@ pub enum ShipDirection {
     West,
 }
 
+impl ShipDirection {
+    pub fn opposite(&self) -> ShipDirection {
+        match *self {
+            ShipDirection::North => ShipDirection::South,
+            ShipDirection::East => ShipDirection::West,
+            ShipDirection::South => ShipDirection::North,
+            ShipDirection::West => ShipDirection::East,
+        }
+    }
+}
+
