@@ -2,13 +2,13 @@ use rand::{Rng, thread_rng};
 use app::GameState;
 use settings::Settings;
 use ship::{Ship, ShipDirection};
-use space::{Space, SpaceState};
+use space::Space;
 
 pub struct Player<'a> {
     settings: &'a Settings,
     pub is_cpu: bool,
-    pub spaces: Vec<Space>,
-    pub ships: Vec<Ship>,
+    spaces: Vec<Space>,
+    ships: Vec<Ship>,
     grid_cursor: [u8; 2],
     pub temp_ship_pos: Vec<[u8; 2]>,
     pub temp_ship_dir: ShipDirection,
@@ -16,7 +16,9 @@ pub struct Player<'a> {
 
 impl<'a> Player<'a> {
     pub fn new(settings: &Settings, is_cpu: bool) -> Player {
-        let mut spaces = vec![];
+        let spaces_x_usize = settings.spaces_x as usize;
+        let spaces_y_usize = settings.spaces_y as usize;
+        let mut spaces = Vec::with_capacity(spaces_x_usize * spaces_y_usize);
         for col in 0..settings.spaces_x {
             for row in 0..settings.spaces_y {
                 spaces.push(Space::new([col, row]));
@@ -37,23 +39,20 @@ impl<'a> Player<'a> {
     /// Selects a space and checks the status of ships if there's a hit.
     pub fn select_space(&mut self, pos: &[u8; 2]) -> GameState {
         let mut game_state = GameState::Active;
-        let ship_hit = self.ships.iter().position(|s| s.position.contains(pos));
-        let space_state = SpaceState::Checked(ship_hit.is_some());
+        let ship_hit = self.ships.iter().position(|s| s.pos().contains(pos));
 
-        let space = self.spaces.iter()
-            .position(|space| &space.position == pos)
-            .unwrap();
-        self.spaces[space].state = space_state;
+        let space_index = self.space_index(pos);
+        self.spaces[space_index].set_checked(ship_hit.is_some());
 
         if let Some(ship) = ship_hit {
-            let ship_sunk = self.ships[ship].position.iter()
-                .all(|p| self.space_is_hit(p));
+            let ship_sunk = self.ships[ship].pos().iter()
+                .all(|p| self.space(p).is_hit());
 
             if ship_sunk {
-                self.ships[ship].state = false;
+                self.ships[ship].sink();
             }
 
-            let all_sunk = self.ships.iter().all(|s| !s.state);
+            let all_sunk = self.ships.iter().all(|s| !s.is_active());
             if all_sunk {
                 game_state = GameState::Over;
             }
@@ -76,8 +75,8 @@ impl<'a> Player<'a> {
         rng.shuffle(&mut directions);
 
         let mut hit_spaces = self.spaces.iter()
-            .filter(|s| s.state == SpaceState::Checked(true))
-            .filter(|s| self.ship_in_space(&s.position).unwrap().state)
+            .filter(|s| s.is_hit())
+            .filter(|s| self.ship(s.pos()).unwrap().is_active())
             .collect::<Vec<&Space>>();
         rng.shuffle(&mut hit_spaces);
 
@@ -85,7 +84,7 @@ impl<'a> Player<'a> {
         for space in &hit_spaces {
             for direction in &directions {
                 let unchecked = self.find_unchecked_space(
-                    &space.position,
+                    space.pos(),
                     *direction,
                     true
                 );
@@ -102,7 +101,7 @@ impl<'a> Player<'a> {
         if hit_spaces.len() > 0 && select.is_empty() {
             for direction in &directions {
                 let unchecked = self.find_unchecked_space(
-                    &hit_spaces[0].position,
+                    hit_spaces[0].pos(),
                     *direction,
                     false
                 );
@@ -116,11 +115,8 @@ impl<'a> Player<'a> {
         if select.is_empty() {
             let mut pos: Option<[u8; 2]> = None;
             while pos.is_none() {
-                let space = [
-                    rng.gen_range(0, self.settings.spaces_x),
-                    rng.gen_range(0, self.settings.spaces_y)
-                ];
-                if self.space_is_unchecked(&space) {
+                let space = self.rng_pos();
+                if self.space(&space).is_unchecked() {
                     pos = Some(space);
                 }
             }
@@ -133,6 +129,14 @@ impl<'a> Player<'a> {
         }
 
         select[0]
+    }
+
+    fn rng_pos(&self) -> [u8; 2] {
+        let mut rng = thread_rng();
+        [
+            rng.gen_range(0, self.settings.spaces_x),
+            rng.gen_range(0, self.settings.spaces_y)
+        ]
     }
 
     pub fn move_temp_ship(&mut self, direction: ShipDirection) {
@@ -192,15 +196,12 @@ impl<'a> Player<'a> {
     fn cpu_place_ship(&self, length: u8) -> Vec<[u8; 2]> {
         let mut ship = vec![];
         let mut valid = false;
-        let mut x: u8;
-        let mut y: u8;
         let mut direction: ShipDirection;
         let mut rng = thread_rng();
 
         // RNG a position and direction, then make sure it's valid.
         while !valid {
-            x = rng.gen_range(0, self.settings.spaces_x);
-            y = rng.gen_range(0, self.settings.spaces_y);
+            let pos = self.rng_pos();
             direction = match rng.gen_range(0, 4) {
                 0 => ShipDirection::North,
                 1 => ShipDirection::East,
@@ -209,7 +210,7 @@ impl<'a> Player<'a> {
                 _ => unreachable!()
             };
 
-            if let Some(s) = self.get_ship_position([x, y], direction, length) {
+            if let Some(s) = self.get_ship_position(pos, direction, length) {
                 valid = self.valid_ship_position(&s);
 
                 if valid {
@@ -270,14 +271,19 @@ impl<'a> Player<'a> {
                  && !(self.ship_is_next_to(s) && self.is_cpu))
     }
 
+    /// Gets a reference to the ships.
+    pub fn ships(&self) -> &Vec<Ship> {
+        &self.ships
+    }
+
     /// Gets a reference to a ship if it is in the given position.
-    fn ship_in_space(&self, pos: &[u8; 2]) -> Option<&Ship> {
-        self.ships.iter().find(|s| s.position.contains(pos))
+    fn ship(&self, pos: &[u8; 2]) -> Option<&Ship> {
+        self.ships.iter().find(|s| s.pos().contains(pos))
     }
 
     /// Checks whether a ship occupies the specified grid coordinates.
     pub fn ship_is_in_space(&self, pos: &[u8; 2]) -> bool {
-        self.ships.iter().any(|s| s.position.contains(pos))
+        self.ships.iter().any(|s| s.pos().contains(pos))
     }
 
     /// Checks whether there is a ship next to the specified grid coordinates.
@@ -305,24 +311,23 @@ impl<'a> Player<'a> {
         result
     }
 
+    /// Gets a reference to the spaces.
+    pub fn spaces(&self) -> &Vec<Space> {
+        &self.spaces
+    }
+
     fn valid_space(&self, pos: &[u8; 2]) -> bool {
         pos[0] < self.settings.spaces_x && pos[1] < self.settings.spaces_y
     }
 
-    /// Returns the current state of a space, if that space exists.
-    fn space_state(&self, pos: &[u8; 2]) -> Option<SpaceState> {
-        match self.spaces.iter().find(|s| &s.position == pos) {
-            Some(space) => Some(space.state),
-            None => None
-        }
+    /// Gets a reference to the space with the given position.
+    pub fn space(&self, pos: &[u8; 2]) -> &Space {
+        self.spaces.get(self.space_index(pos)).unwrap()
     }
 
-    pub fn space_is_unchecked(&self, pos: &[u8; 2]) -> bool {
-        self.space_state(&pos) == Some(SpaceState::Unchecked)
-    }
-
-    pub fn space_is_hit(&self, pos: &[u8; 2]) -> bool {
-        self.space_state(&pos) == Some(SpaceState::Checked(true))
+    /// Calculates the index of the given position in the spaces vector.
+    fn space_index(&self, pos: &[u8; 2]) -> usize {
+        self.settings.spaces_x as usize * pos[0] as usize + pos[1] as usize
     }
 
     /// Returns the coordinates of the player's grid cursor.
@@ -366,10 +371,11 @@ impl<'a> Player<'a> {
         let mut check_pos = self.movement(pos, direction);
 
         while let Some(next_pos) = check_pos {
-            match self.space_is_hit(&next_pos) {
+            let next_space = self.space(&next_pos);
+            match next_space.is_hit() {
                 true => check_pos = self.movement(&next_pos, direction),
                 false => {
-                    if !self.space_is_unchecked(&next_pos) {
+                    if !next_space.is_unchecked() {
                         check_pos = None;
                     }
                     break;

@@ -56,12 +56,12 @@ impl<'a> App<'a> {
                 self.players[self.turn as usize].cpu_place_ships();
             }
 
-            if self.players[self.turn as usize].ships.len() == 4 {
+            if self.players[self.turn as usize].ships().len() == 4 {
                 self.switch_turn();
             }
 
             // All ships have been placed; start the game.
-            if self.players[0].ships.len() == 4 && self.players[1].ships.len() == 4 {
+            if self.players[0].ships().len() == 4 && self.players[1].ships().len() == 4 {
                 self.state = GameState::Active;
             }
         } else if self.state == GameState::Active || self.state == GameState::Over {
@@ -133,11 +133,11 @@ impl<'a> App<'a> {
         }
     }
 
-    /// Selects `grid_pos` on the opponent's grid if it is unchecked.
-    fn select_opponent_space(&mut self, grid_pos: &[u8; 2]) {
+    /// Selects a position on the opponent's grid if it is unchecked.
+    fn select_opponent_space(&mut self, pos: &[u8; 2]) {
         let ref mut opponent = self.players[self.not_turn()];
-        if opponent.space_is_unchecked(&grid_pos) {
-            self.state = opponent.select_space(&grid_pos);
+        if opponent.space(pos).is_unchecked() {
+            self.state = opponent.select_space(pos);
             self.turn_active = false;
         }
     }
@@ -230,7 +230,7 @@ impl<'a> App<'a> {
                 if let Some(ship) = player.get_ship_position(
                     grid_pos,
                     player.temp_ship_dir,
-                    player.ships.len() as u8 + 2
+                    player.ships().len() as u8 + 2
                 ) {
                     player.temp_ship_pos = ship;
                 }

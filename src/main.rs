@@ -10,7 +10,6 @@ mod space;
 use piston_window::*;
 use std::path::PathBuf;
 use app::GameState;
-use space::SpaceState;
 
 fn assets_dir(mut dir: PathBuf) -> Result<PathBuf, &'static str> {
     let mut result = None;
@@ -149,8 +148,8 @@ fn main() {
                 };
 
                 // Ship icons above grid
-                for (i, ship) in shown_player.ships.iter().enumerate() {
-                    if ship.state {
+                for (i, ship) in shown_player.ships().iter().enumerate() {
+                    if ship.is_active() {
                         let transform = c.transform.trans(
                             (settings.space_size as u32 * 2 * i as u32 + app.grid_area[0] * 2) as f64,
                             30.0 as f64,
@@ -160,21 +159,24 @@ fn main() {
                 }
 
                 // Grid spaces
-                for space in &shown_player.spaces {
+                for space in shown_player.spaces() {
+                    let space_pos = space.pos();
                     let transform = c.transform.trans(
-                        (settings.space_size as u32 * space.position[0] as u32 + app.grid_area[0]) as f64,
-                        (settings.space_size as u32 * space.position[1] as u32 + app.grid_area[1]) as f64,
+                        (settings.space_size as u32 * space_pos[0] as u32 + app.grid_area[0]) as f64,
+                        (settings.space_size as u32 * space_pos[1] as u32 + app.grid_area[1]) as f64,
                     );
 
                     // Only show ship locations during ship placement or if the
                     // current player is computer-controlled.
-                    if shown_player.ship_is_in_space(&space.position) && (app.state == GameState::ShipPlacement || (space.state == SpaceState::Unchecked && current_player.is_cpu)) {
+                    if shown_player.ship_is_in_space(space_pos) && (app.state == GameState::ShipPlacement || (space.is_unchecked() && current_player.is_cpu)) {
                         image(&space_textures[3], transform, g);
                     } else {
-                        let space_state: usize = match space.state {
-                            SpaceState::Unchecked => 0,
-                            SpaceState::Checked(false) => 1,
-                            SpaceState::Checked(true) => 2
+                        let space_state = if space.is_unchecked() {
+                            0
+                        } else if space.is_empty() {
+                            1
+                        } else {
+                            2
                         };
                         image(&space_textures[space_state], transform, g);
                     }
