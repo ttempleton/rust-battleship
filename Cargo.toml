@@ -4,6 +4,6 @@ version = "0.1.0"
 authors = ["Thomas Templeton <thomas.templeton.dev@gmail.com>"]
 
 [dependencies]
-piston_window = "^0.62.0"
-rand = "^0.3.15"
+piston_window = "^0.89.0"
+rand = "^0.6.5"
 
