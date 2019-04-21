@@ -1,4 +1,5 @@
 use rand::{Rng, thread_rng};
+use rand::seq::SliceRandom;
 use game::GameState;
 use ship::{Ship, ShipDirection};
 use space::Space;
@@ -71,14 +72,15 @@ impl Player {
             ShipDirection::South,
             ShipDirection::West
         ];
-        rng.shuffle(&mut directions);
+
+        directions.shuffle(&mut rng);
 
         let mut hit_spaces = self.spaces.iter()
             .filter(|s| s.is_hit())
             .filter(|s| self.ship(s.pos()).unwrap().is_active())
             .collect::<Vec<&Space>>();
 
-        rng.shuffle(&mut hit_spaces);
+        hit_spaces.shuffle(&mut rng);
 
         // Check for a line of hit spaces.
         for space in &hit_spaces {
@@ -128,7 +130,7 @@ impl Player {
         }
 
         if select.len() > 1 {
-            rng.shuffle(&mut select);
+            select.shuffle(&mut rng);
         }
 
         select[0]
