@@ -1,5 +1,7 @@
-use player::Player;
-use settings::Settings;
+use crate::{
+    player::Player,
+    settings::Settings,
+};
 
 pub struct Game<'a> {
     pub settings: &'a Settings,

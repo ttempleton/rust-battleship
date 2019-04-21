@@ -1,9 +1,13 @@
-use std::env::current_exe;
-use std::path::PathBuf;
+use std::{
+    env::current_exe,
+    path::PathBuf,
+};
 use piston_window::*;
-use game::*;
-use settings::Settings;
-use ship::ShipDirection;
+use crate::{
+    game::*,
+    settings::Settings,
+    ship::ShipDirection,
+};
 
 pub struct App<'a> {
     window: PistonWindow,

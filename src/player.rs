@@ -1,8 +1,16 @@
-use rand::{Rng, thread_rng};
-use rand::seq::SliceRandom;
-use game::GameState;
-use ship::{Ship, ShipDirection};
-use space::Space;
+use rand::{
+    Rng,
+    seq::SliceRandom,
+    thread_rng,
+};
+use crate::{
+    game::GameState,
+    ship::{
+        Ship,
+        ShipDirection,
+    },
+    space::Space,
+};
 
 pub struct Player {
     pub is_cpu: bool,

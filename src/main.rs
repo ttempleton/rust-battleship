@@ -1,6 +1,3 @@
-extern crate piston_window;
-extern crate rand;
-
 mod app;
 mod game;
 mod player;
