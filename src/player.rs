@@ -1,35 +1,35 @@
 use rand::{Rng, thread_rng};
-use app::GameState;
-use settings::Settings;
+use game::GameState;
 use ship::{Ship, ShipDirection};
 use space::Space;
 
-pub struct Player<'a> {
-    settings: &'a Settings,
+pub struct Player {
     pub is_cpu: bool,
     spaces: Vec<Space>,
     ships: Vec<Ship>,
+    grid_size: [u8; 2],
     grid_cursor: [u8; 2],
     pub temp_ship_pos: Vec<[u8; 2]>,
     pub temp_ship_dir: ShipDirection,
 }
 
-impl<'a> Player<'a> {
-    pub fn new(settings: &Settings, is_cpu: bool) -> Player {
-        let spaces_x_usize = settings.spaces_x as usize;
-        let spaces_y_usize = settings.spaces_y as usize;
-        let mut spaces = Vec::with_capacity(spaces_x_usize * spaces_y_usize);
-        for col in 0..settings.spaces_x {
-            for row in 0..settings.spaces_y {
+impl Player {
+    pub fn new(grid_size: [u8; 2], is_cpu: bool) -> Player {
+        let spaces_x = grid_size[0] as usize;
+        let spaces_y = grid_size[1] as usize;
+        let mut spaces = Vec::with_capacity(spaces_x * spaces_y);
+
+        for col in 0..grid_size[0] {
+            for row in 0..grid_size[1] {
                 spaces.push(Space::new([col, row]));
             }
         }
 
         Player {
-            settings: &settings,
             is_cpu: is_cpu,
             spaces: spaces,
             ships: vec![],
+            grid_size: grid_size,
             grid_cursor: [0, 0],
             temp_ship_pos: vec![[0, 0], [1, 0]],
             temp_ship_dir: ShipDirection::West,
@@ -62,10 +62,9 @@ impl<'a> Player<'a> {
     }
 
     /// Determines the next space a CPU player will select.
-    pub fn cpu_select_space(&mut self) -> [u8; 2] {
+    pub fn cpu_select_space(&self) -> [u8; 2] {
         let mut rng = thread_rng();
         let mut select = Vec::new();
-
         let mut directions = [
             ShipDirection::North,
             ShipDirection::East,
@@ -78,6 +77,7 @@ impl<'a> Player<'a> {
             .filter(|s| s.is_hit())
             .filter(|s| self.ship(s.pos()).unwrap().is_active())
             .collect::<Vec<&Space>>();
+
         rng.shuffle(&mut hit_spaces);
 
         // Check for a line of hit spaces.
@@ -88,6 +88,7 @@ impl<'a> Player<'a> {
                     *direction,
                     true
                 );
+
                 if let Some(pos) = unchecked {
                     if !select.contains(&pos) {
                         select.push(pos);
@@ -105,6 +106,7 @@ impl<'a> Player<'a> {
                     *direction,
                     false
                 );
+
                 if let Some(pos) = unchecked {
                     select.push(pos);
                 }
@@ -116,6 +118,7 @@ impl<'a> Player<'a> {
             let mut pos: Option<[u8; 2]> = None;
             while pos.is_none() {
                 let space = self.rng_pos();
+
                 if self.space(&space).is_unchecked() {
                     pos = Some(space);
                 }
@@ -133,16 +136,17 @@ impl<'a> Player<'a> {
 
     fn rng_pos(&self) -> [u8; 2] {
         let mut rng = thread_rng();
+
         [
-            rng.gen_range(0, self.settings.spaces_x),
-            rng.gen_range(0, self.settings.spaces_y)
+            rng.gen_range(0, self.grid_size[0]),
+            rng.gen_range(0, self.grid_size[1]),
         ]
     }
 
     pub fn move_temp_ship(&mut self, direction: ShipDirection) {
         let old_head = self.temp_ship_pos[0];
-        if let Some(new_head) = self.movement(&old_head, direction) {
 
+        if let Some(new_head) = self.movement(&old_head, direction) {
             if let Some(ship) = self.get_ship_position(
                 new_head,
                 self.temp_ship_dir,
@@ -175,6 +179,7 @@ impl<'a> Player<'a> {
             ShipDirection::South => ShipDirection::West,
             ShipDirection::West => ShipDirection::North,
         };
+
         if let Some(ship) = self.get_ship_position(
             self.temp_ship_pos[0],
             direction,
@@ -235,14 +240,15 @@ impl<'a> Player<'a> {
         length: u8
     ) -> Option<Vec<[u8; 2]>> {
         let valid = match direction {
-            ShipDirection::North => head[1] + length <= self.settings.spaces_y,
+            ShipDirection::North => head[1] + length <= self.grid_size[1],
             ShipDirection::East => head[0] >= length - 1,
             ShipDirection::South => head[1] >= length - 1,
-            ShipDirection::West => head[0] + length <= self.settings.spaces_x,
+            ShipDirection::West => head[0] + length <= self.grid_size[0],
         };
 
         let ship_opt = if valid {
             let mut ship = vec![head];
+
             for pos in 1..length {
                 let pos_u8 = pos as u8;
                 let space = match direction {
@@ -281,30 +287,34 @@ impl<'a> Player<'a> {
         self.ships.iter().find(|s| s.pos().contains(pos))
     }
 
-    /// Checks whether a ship occupies the specified grid coordinates.
+    /// Returns whether a ship occupies the specified grid coordinates.
     pub fn ship_is_in_space(&self, pos: &[u8; 2]) -> bool {
         self.ships.iter().any(|s| s.pos().contains(pos))
     }
 
-    /// Checks whether there is a ship next to the specified grid coordinates.
+    /// Returns whether there is a ship next to the specified grid coordinates.
     fn ship_is_next_to(&self, pos: &[u8; 2]) -> bool {
         let mut result = false;
         let x = pos[0];
         let y = pos[1];
+
         // Left
         if x > 0 {
             result = self.ship_is_in_space(&[x - 1, y]);
         }
+
         // Right
-        if x < self.settings.spaces_x - 1 && !result {
+        if x < self.grid_size[0] - 1 && !result {
             result = self.ship_is_in_space(&[x + 1, y]);
         }
+
         // Above
         if y > 0 && !result {
             result = self.ship_is_in_space(&[x, y - 1]);
         }
+
         // Below
-        if y < self.settings.spaces_y - 1 && !result {
+        if y < self.grid_size[1] - 1 && !result {
             result = self.ship_is_in_space(&[x, y + 1]);
         }
 
@@ -316,8 +326,9 @@ impl<'a> Player<'a> {
         &self.spaces
     }
 
+    /// Returns whether the given position is valid.
     fn valid_space(&self, pos: &[u8; 2]) -> bool {
-        pos[0] < self.settings.spaces_x && pos[1] < self.settings.spaces_y
+        pos[0] < self.grid_size[0] && pos[1] < self.grid_size[1]
     }
 
     /// Gets a reference to the space with the given position.
@@ -327,7 +338,7 @@ impl<'a> Player<'a> {
 
     /// Calculates the index of the given position in the spaces vector.
     fn space_index(&self, pos: &[u8; 2]) -> usize {
-        self.settings.spaces_x as usize * pos[0] as usize + pos[1] as usize
+        self.grid_size[0] as usize * pos[0] as usize + pos[1] as usize
     }
 
     /// Returns the coordinates of the player's grid cursor.
@@ -340,8 +351,8 @@ impl<'a> Player<'a> {
     pub fn movement(&self, pos: &[u8; 2], direction: ShipDirection) -> Option<[u8; 2]> {
         let valid = match direction {
             ShipDirection::North => pos[1] > 0,
-            ShipDirection::East => pos[0] < self.settings.spaces_x - 1,
-            ShipDirection::South => pos[1] < self.settings.spaces_y - 1,
+            ShipDirection::East => pos[0] < self.grid_size[0] - 1,
+            ShipDirection::South => pos[1] < self.grid_size[1] - 1,
             ShipDirection::West => pos[0] > 0,
         };
 
@@ -372,6 +383,7 @@ impl<'a> Player<'a> {
 
         while let Some(next_pos) = check_pos {
             let next_space = self.space(&next_pos);
+
             match next_space.is_hit() {
                 true => check_pos = self.movement(&next_pos, direction),
                 false => {
@@ -387,6 +399,7 @@ impl<'a> Player<'a> {
             let unchecked = check_pos.unwrap();
             let opposite_dir = direction.opposite();
             let prev_pos = self.movement(&unchecked, opposite_dir).unwrap();
+
             if &prev_pos == pos {
                 check_pos = None;
             }
