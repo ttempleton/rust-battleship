@@ -1,3 +1,4 @@
+use std::cmp;
 use rand::{
     Rng,
     seq::SliceRandom,
@@ -182,21 +183,42 @@ impl Player {
         }
     }
 
+    /// Rotates a ship during the ship placement game state.
     pub fn rotate_temp_ship(&mut self) {
-        let direction = match self.temp_ship_dir {
+        let ship_len = self.temp_ship_pos.len() as u8;
+        let dir = match self.temp_ship_dir {
             ShipDirection::North => ShipDirection::East,
             ShipDirection::East => ShipDirection::South,
             ShipDirection::South => ShipDirection::West,
             ShipDirection::West => ShipDirection::North,
         };
 
-        if let Some(ship) = self.get_ship_position(
-            self.temp_ship_pos[0],
-            direction,
-            self.temp_ship_pos.len() as u8
-        ) {
+        // If the current starting position would cause the rotation to position
+        // the ship partially out of bounds, adjust the starting position such
+        // that the ship will be entirely within bounds.
+        let old_start_pos = self.temp_ship_pos[0];
+        let start_pos = match dir {
+            ShipDirection::North => [
+                self.temp_ship_pos[0][0],
+                cmp::min(old_start_pos[1], self.grid_size[1] - ship_len),
+            ],
+            ShipDirection::East => [
+                cmp::max(old_start_pos[0], ship_len - 1),
+                self.temp_ship_pos[0][1],
+            ],
+            ShipDirection::South => [
+                self.temp_ship_pos[0][0],
+                cmp::max(old_start_pos[1], ship_len - 1),
+            ],
+            ShipDirection::West => [
+                cmp::min(old_start_pos[0], self.grid_size[0] - ship_len),
+                self.temp_ship_pos[0][1],
+            ],
+        };
+
+        if let Some(ship) = self.get_ship_position(start_pos, dir, ship_len) {
             self.temp_ship_pos = ship;
-            self.temp_ship_dir = direction;
+            self.temp_ship_dir = dir;
         }
     }
 
