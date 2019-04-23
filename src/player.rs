@@ -85,8 +85,7 @@ impl Player {
         directions.shuffle(&mut rng);
 
         let mut hit_spaces = self.spaces.iter()
-            .filter(|s| s.is_hit())
-            .filter(|s| self.ship(s.pos()).unwrap().is_active())
+            .filter(|s| s.is_hit() && self.ship(s.pos()).unwrap().is_active())
             .collect::<Vec<&Space>>();
 
         hit_spaces.shuffle(&mut rng);
