@@ -126,16 +126,15 @@ impl Player {
 
         // If no spaces have been selected, just select any available space.
         if select.is_empty() {
-            let mut pos: Option<[u8; 2]> = None;
-            while pos.is_none() {
+            let pos: [u8; 2] = loop {
                 let space = self.rng_pos();
 
                 if self.space(&space).is_unchecked() {
-                    pos = Some(space);
+                    break space;
                 }
-            }
+            };
 
-            select.push(pos.unwrap());
+            select.push(pos);
         }
 
         if select.len() > 1 {
