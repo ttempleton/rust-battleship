@@ -298,14 +298,14 @@ impl Player {
     ///
     /// If the player is CPU-controlled, a ship in a space next to another ship
     /// will be considered invalid.
-    pub fn valid_ship_position(&self, new_ship: &Vec<[u8; 2]>) -> bool {
+    pub fn valid_ship_position(&self, new_ship: &[[u8; 2]]) -> bool {
         new_ship.iter()
             .all(|s| self.valid_space(s) && !self.ship_is_in_space(s)
                  && !(self.ship_is_next_to(s) && self.is_cpu))
     }
 
     /// Gets a reference to the ships.
-    pub fn ships(&self) -> &Vec<Ship> {
+    pub fn ships(&self) -> &[Ship] {
         &self.ships
     }
 
@@ -349,7 +349,7 @@ impl Player {
     }
 
     /// Gets a reference to the spaces.
-    pub fn spaces(&self) -> &Vec<Space> {
+    pub fn spaces(&self) -> &[Space] {
         &self.spaces
     }
 

@@ -11,7 +11,7 @@ impl Ship {
         }
     }
 
-    pub fn pos(&self) -> &Vec<[u8; 2]> {
+    pub fn pos(&self) -> &[[u8; 2]] {
         &self.position
     }
 
