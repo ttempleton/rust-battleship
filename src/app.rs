@@ -16,7 +16,8 @@ pub struct App<'a> {
     turn_active: bool,
     turn_end_timer: f64,
     cpu_turn_timer: f64,
-    mouse_cursor: [f64; 2]
+    mouse_cursor: [f64; 2],
+    grid_area: [u32; 4],
 }
 
 impl<'a> App<'a> {
@@ -51,6 +52,7 @@ impl<'a> App<'a> {
             turn_end_timer: 0.0,
             cpu_turn_timer: 0.0,
             mouse_cursor: [0.0; 2],
+            grid_area: grid_area,
         }
     }
 
@@ -120,7 +122,7 @@ impl<'a> App<'a> {
                 };
 
                 let space_size_u32 = self.game.settings.space_size as u32;
-                let grid_area = self.game.grid_area;
+                let grid_area = self.grid_area;
                 let window_size = self.window_size;
                 let turn_end_timer = self.turn_end_timer;
                 let game_winner = self.game.get_winner();
@@ -376,14 +378,14 @@ impl<'a> App<'a> {
     /// Returns the grid coordinates of the mouse cursor position.
     fn mouse_cursor_grid_position(&self) -> Option<[u8; 2]> {
         let position: Option<[u8; 2]>;
-        if self.mouse_cursor[0] >= self.game.grid_area[0] as f64
-            && self.mouse_cursor[1] >= self.game.grid_area[1] as f64
-            && self.mouse_cursor[0] < (self.game.grid_area[0] + self.game.grid_area[2]) as f64
-            && self.mouse_cursor[1] < (self.game.grid_area[1] + self.game.grid_area[3]) as f64
+        if self.mouse_cursor[0] >= self.grid_area[0] as f64
+            && self.mouse_cursor[1] >= self.grid_area[1] as f64
+            && self.mouse_cursor[0] < (self.grid_area[0] + self.grid_area[2]) as f64
+            && self.mouse_cursor[1] < (self.grid_area[1] + self.grid_area[3]) as f64
         {
             position = Some([
-                ((self.mouse_cursor[0] - self.game.grid_area[0] as f64) / self.game.grid_area[0] as f64) as u8,
-                ((self.mouse_cursor[1] - self.game.grid_area[1] as f64) / self.game.grid_area[0] as f64) as u8,
+                ((self.mouse_cursor[0] - self.grid_area[0] as f64) / self.grid_area[0] as f64) as u8,
+                ((self.mouse_cursor[1] - self.grid_area[1] as f64) / self.grid_area[0] as f64) as u8,
             ]);
         } else {
             position = None;

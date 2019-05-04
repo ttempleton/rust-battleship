@@ -9,17 +9,10 @@ pub struct Game<'a> {
     state: GameState,
     turn: u8,
     winner: Option<u8>,
-    pub grid_area: [u32; 4],
 }
 
 impl<'a> Game<'a> {
     pub fn new(settings: &Settings) -> Game {
-        let grid_area = [
-            settings.space_size,
-            settings.space_size * 3,
-            settings.spaces_x as u32 * settings.space_size,
-            settings.spaces_y as u32 * settings.space_size
-        ];
         let grid_size = [
             settings.spaces_x,
             settings.spaces_y,
@@ -34,7 +27,6 @@ impl<'a> Game<'a> {
             state: GameState::ShipPlacement,
             turn: 0,
             winner: None,
-            grid_area: grid_area,
         }
     }
 
