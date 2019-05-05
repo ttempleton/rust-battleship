@@ -217,7 +217,8 @@ impl<'a> App<'a> {
                     }
 
                     // Game over content, to appear over the black rectangle.
-                    if let Some(winner) = game_winner {
+                    if turn_end_timer >= 1.5 && game_winner.is_some() {
+                        let winner = game_winner.unwrap();
                         let game_over_text_size = game_over_text[0].get_size();
                         let wins_text_size = game_over_text[1].get_size();
                         let player_text_size = player_text[winner].get_size();
@@ -254,23 +255,17 @@ impl<'a> App<'a> {
 
             // All ships have been placed; start the game.
             if self.game.active_player().ships().len() == 4 && self.game.inactive_player().ships().len() == 4 {
-
                 self.game.start();
             }
         } else if state == GameState::Active || state == GameState::Over {
-            if !self.turn_active && self.game.get_winner().is_none() {
-
+            if !self.turn_active {
                 // Continue/end the end-of-turn delay.
                 if self.turn_end_timer < 1.5 {
                     self.turn_end_timer += u.dt;
-                } else {
-                    if state == GameState::Active {
-                        self.game.switch_turn();
-                        self.turn_end_timer = 0.0;
-                        self.turn_active = true;
-                    } else {
-                        self.game.end();
-                    }
+                } else if state == GameState::Active {
+                    self.game.switch_turn();
+                    self.turn_end_timer = 0.0;
+                    self.turn_active = true;
                 }
             }
 

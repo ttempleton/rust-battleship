@@ -8,7 +8,6 @@ pub struct Game<'a> {
     players: [Player; 2],
     state: GameState,
     turn: u8,
-    winner: Option<u8>,
 }
 
 impl<'a> Game<'a> {
@@ -26,7 +25,6 @@ impl<'a> Game<'a> {
             ],
             state: GameState::ShipPlacement,
             turn: 0,
-            winner: None,
         }
     }
 
@@ -53,11 +51,6 @@ impl<'a> Game<'a> {
     /// Starts the game by setting the game state to active.
     pub fn start(&mut self) {
         self.state = GameState::Active;
-    }
-
-    /// Ends the game by setting the current player as the winner.
-    pub fn end(&mut self) {
-        self.winner = Some(self.turn);
     }
 
     /// Returns as `usize` the index of the currently active player.
@@ -97,9 +90,9 @@ impl<'a> Game<'a> {
 
     /// Returns as `usize` the winner, if there is one.
     pub fn get_winner(&self) -> Option<usize> {
-        match self.winner {
-            Some(w) => Some(w as usize),
-            None => None
+        match self.state {
+            GameState::Over => Some(self.turn as usize),
+            _ => None
         }
     }
 
