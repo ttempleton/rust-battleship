@@ -381,16 +381,14 @@ impl Player {
             ShipDirection::West => pos[0] > 0,
         };
 
-        if valid {
-            let movement = match direction {
+        match valid {
+            true => Some(match direction {
                 ShipDirection::North => [pos[0], pos[1] - 1],
                 ShipDirection::East => [pos[0] + 1, pos[1]],
                 ShipDirection::South => [pos[0], pos[1] + 1],
                 ShipDirection::West => [pos[0] - 1, pos[1]],
-            };
-            Some(movement)
-        } else {
-            None
+            }),
+            false => None,
         }
     }
 
