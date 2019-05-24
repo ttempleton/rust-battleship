@@ -373,7 +373,7 @@ impl Player {
 
     /// Returns the coordinates of a movement from `pos` in a `direction`.
     /// Returns `None` if the movement is not possible.
-    pub fn movement(&self, pos: &[u8; 2], direction: ShipDirection) -> Option<[u8; 2]> {
+    fn movement(&self, pos: &[u8; 2], direction: ShipDirection) -> Option<[u8; 2]> {
         let valid = match direction {
             ShipDirection::North => pos[1] > 0,
             ShipDirection::East => pos[0] < self.grid_size[0] - 1,
