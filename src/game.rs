@@ -13,8 +13,8 @@ pub struct Game<'a> {
 impl<'a> Game<'a> {
     pub fn new(settings: &Settings) -> Game {
         let grid_size = [
-            settings.spaces_x,
-            settings.spaces_y,
+            settings.spaces[0],
+            settings.spaces[1],
         ];
 
         Game {

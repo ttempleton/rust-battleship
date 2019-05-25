@@ -25,8 +25,8 @@ impl<'a> App<'a> {
         let grid_area = [
             settings.space_size,
             settings.space_size * 3,
-            settings.spaces_x as u32 * settings.space_size,
-            settings.spaces_y as u32 * settings.space_size
+            settings.spaces[0] as u32 * settings.space_size,
+            settings.spaces[1] as u32 * settings.space_size
         ];
 
         let window_size = [
