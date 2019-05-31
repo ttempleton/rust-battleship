@@ -372,21 +372,20 @@ impl<'a> App<'a> {
 
     /// Returns the grid coordinates of the mouse cursor position.
     fn mouse_cursor_grid_position(&self) -> Option<[u8; 2]> {
-        let position: Option<[u8; 2]>;
-        if self.mouse_cursor[0] >= self.grid_area[0] as f64
-            && self.mouse_cursor[1] >= self.grid_area[1] as f64
-            && self.mouse_cursor[0] < (self.grid_area[0] + self.grid_area[2]) as f64
-            && self.mouse_cursor[1] < (self.grid_area[1] + self.grid_area[3]) as f64
-        {
-            position = Some([
+        match self.mouse_over_grid() {
+            true => Some([
                 ((self.mouse_cursor[0] - self.grid_area[0] as f64) / self.grid_area[0] as f64) as u8,
                 ((self.mouse_cursor[1] - self.grid_area[1] as f64) / self.grid_area[0] as f64) as u8,
-            ]);
-        } else {
-            position = None;
+            ]),
+            false => None,
         }
+    }
 
-        position
+    fn mouse_over_grid(&self) -> bool {
+        self.mouse_cursor[0] >= self.grid_area[0] as f64
+        && self.mouse_cursor[1] >= self.grid_area[1] as f64
+        && self.mouse_cursor[0] < (self.grid_area[0] + self.grid_area[2]) as f64
+        && self.mouse_cursor[1] < (self.grid_area[1] + self.grid_area[3]) as f64
     }
 
     /// Returns the texture from the file at the given path.
