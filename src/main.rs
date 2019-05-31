@@ -1,4 +1,5 @@
 mod app;
+mod direction;
 mod game;
 mod player;
 mod settings;

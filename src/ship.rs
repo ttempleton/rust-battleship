@@ -24,22 +24,3 @@ impl Ship {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum ShipDirection {
-    North,
-    East,
-    South,
-    West,
-}
-
-impl ShipDirection {
-    pub fn opposite(&self) -> ShipDirection {
-        match *self {
-            ShipDirection::North => ShipDirection::South,
-            ShipDirection::East => ShipDirection::West,
-            ShipDirection::South => ShipDirection::North,
-            ShipDirection::West => ShipDirection::East,
-        }
-    }
-}
-

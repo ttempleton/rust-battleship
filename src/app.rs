@@ -4,9 +4,9 @@ use std::{
 };
 use piston_window::*;
 use crate::{
+    direction::Direction,
     game::*,
     settings::Settings,
-    ship::ShipDirection,
 };
 
 pub struct App<'a> {
@@ -296,22 +296,22 @@ impl<'a> App<'a> {
 
     /// Processes left button presses according to the current program state.
     fn button_left(&mut self) {
-        self.movement(ShipDirection::West);
+        self.movement(Direction::West);
     }
 
     /// Processes right button presses according to the current program state.
     fn button_right(&mut self) {
-        self.movement(ShipDirection::East);
+        self.movement(Direction::East);
     }
 
     /// Processes up button presses according to the current program state.
     fn button_up(&mut self) {
-        self.movement(ShipDirection::North);
+        self.movement(Direction::North);
     }
 
     /// Processes down button presses according to the current program state.
     fn button_down(&mut self) {
-        self.movement(ShipDirection::South);
+        self.movement(Direction::South);
     }
 
     /// Processes primary button presses according to the current program state.
@@ -335,7 +335,7 @@ impl<'a> App<'a> {
     }
 
     /// Performs grid movement according to the current program state.
-    fn movement(&mut self, direction: ShipDirection) {
+    fn movement(&mut self, direction: Direction) {
         if self.game.is_player_placing_ship() {
             self.game.active_player_mut().move_temp_ship(direction);
         }

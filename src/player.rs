@@ -5,11 +5,9 @@ use rand::{
     thread_rng,
 };
 use crate::{
+    direction::Direction,
     game::GameState,
-    ship::{
-        Ship,
-        ShipDirection,
-    },
+    ship::Ship,
     space::Space,
 };
 
@@ -20,7 +18,7 @@ pub struct Player {
     grid_size: [u8; 2],
     grid_cursor: [u8; 2],
     pub temp_ship_pos: Vec<[u8; 2]>,
-    pub temp_ship_dir: ShipDirection,
+    pub temp_ship_dir: Direction,
 }
 
 impl Player {
@@ -42,7 +40,7 @@ impl Player {
             grid_size: grid_size,
             grid_cursor: [0, 0],
             temp_ship_pos: vec![[0, 0], [1, 0]],
-            temp_ship_dir: ShipDirection::West,
+            temp_ship_dir: Direction::West,
         }
     }
 
@@ -76,10 +74,10 @@ impl Player {
         let mut rng = thread_rng();
         let mut select = Vec::new();
         let mut directions = [
-            ShipDirection::North,
-            ShipDirection::East,
-            ShipDirection::South,
-            ShipDirection::West
+            Direction::North,
+            Direction::East,
+            Direction::South,
+            Direction::West
         ];
 
         directions.shuffle(&mut rng);
@@ -152,7 +150,7 @@ impl Player {
         ]
     }
 
-    pub fn move_temp_ship(&mut self, direction: ShipDirection) {
+    pub fn move_temp_ship(&mut self, direction: Direction) {
         let old_head = self.temp_ship_pos[0];
 
         if let Some(new_head) = self.movement(&old_head, direction) {
@@ -172,7 +170,7 @@ impl Player {
         if self.valid_ship_position(&ship) {
             self.ships.push(Ship::new(ship));
 
-            self.temp_ship_dir = ShipDirection::West;
+            self.temp_ship_dir = Direction::West;
             self.temp_ship_pos = self.get_ship_position(
                 [0, 0],
                 self.temp_ship_dir,
@@ -185,10 +183,10 @@ impl Player {
     pub fn rotate_temp_ship(&mut self) {
         let ship_len = self.temp_ship_pos.len() as u8;
         let dir = match self.temp_ship_dir {
-            ShipDirection::North => ShipDirection::East,
-            ShipDirection::East => ShipDirection::South,
-            ShipDirection::South => ShipDirection::West,
-            ShipDirection::West => ShipDirection::North,
+            Direction::North => Direction::East,
+            Direction::East => Direction::South,
+            Direction::South => Direction::West,
+            Direction::West => Direction::North,
         };
 
         // If the current starting position would cause the rotation to position
@@ -196,19 +194,19 @@ impl Player {
         // that the ship will be entirely within bounds.
         let old_start_pos = self.temp_ship_pos[0];
         let start_pos = match dir {
-            ShipDirection::North => [
+            Direction::North => [
                 self.temp_ship_pos[0][0],
                 cmp::min(old_start_pos[1], self.grid_size[1] - ship_len),
             ],
-            ShipDirection::East => [
+            Direction::East => [
                 cmp::max(old_start_pos[0], ship_len - 1),
                 self.temp_ship_pos[0][1],
             ],
-            ShipDirection::South => [
+            Direction::South => [
                 self.temp_ship_pos[0][0],
                 cmp::max(old_start_pos[1], ship_len - 1),
             ],
-            ShipDirection::West => [
+            Direction::West => [
                 cmp::min(old_start_pos[0], self.grid_size[0] - ship_len),
                 self.temp_ship_pos[0][1],
             ],
@@ -235,10 +233,10 @@ impl Player {
         loop {
             let pos = self.rng_pos();
             let direction = match rng.gen_range(0, 4) {
-                0 => ShipDirection::North,
-                1 => ShipDirection::East,
-                2 => ShipDirection::South,
-                3 => ShipDirection::West,
+                0 => Direction::North,
+                1 => Direction::East,
+                2 => Direction::South,
+                3 => Direction::West,
                 _ => unreachable!()
             };
 
@@ -261,14 +259,14 @@ impl Player {
     pub fn get_ship_position(
         &self,
         head: [u8; 2],
-        direction: ShipDirection,
+        direction: Direction,
         length: u8
     ) -> Option<Vec<[u8; 2]>> {
         let valid = match direction {
-            ShipDirection::North => head[1] + length <= self.grid_size[1],
-            ShipDirection::East => head[0] >= length - 1,
-            ShipDirection::South => head[1] >= length - 1,
-            ShipDirection::West => head[0] + length <= self.grid_size[0],
+            Direction::North => head[1] + length <= self.grid_size[1],
+            Direction::East => head[0] >= length - 1,
+            Direction::South => head[1] >= length - 1,
+            Direction::West => head[0] + length <= self.grid_size[0],
         };
 
         let ship_opt = if valid {
@@ -277,10 +275,10 @@ impl Player {
             for pos in 1..length {
                 let pos_u8 = pos as u8;
                 let space = match direction {
-                    ShipDirection::North => [head[0], head[1] + pos_u8],
-                    ShipDirection::East => [head[0] - pos_u8, head[1]],
-                    ShipDirection::South => [head[0], head[1] - pos_u8],
-                    ShipDirection::West => [head[0] + pos_u8, head[1]],
+                    Direction::North => [head[0], head[1] + pos_u8],
+                    Direction::East => [head[0] - pos_u8, head[1]],
+                    Direction::South => [head[0], head[1] - pos_u8],
+                    Direction::West => [head[0] + pos_u8, head[1]],
                 };
                 ship.push(space);
             }
@@ -373,20 +371,20 @@ impl Player {
 
     /// Returns the coordinates of a movement from `pos` in a `direction`.
     /// Returns `None` if the movement is not possible.
-    fn movement(&self, pos: &[u8; 2], direction: ShipDirection) -> Option<[u8; 2]> {
+    fn movement(&self, pos: &[u8; 2], direction: Direction) -> Option<[u8; 2]> {
         let valid = match direction {
-            ShipDirection::North => pos[1] > 0,
-            ShipDirection::East => pos[0] < self.grid_size[0] - 1,
-            ShipDirection::South => pos[1] < self.grid_size[1] - 1,
-            ShipDirection::West => pos[0] > 0,
+            Direction::North => pos[1] > 0,
+            Direction::East => pos[0] < self.grid_size[0] - 1,
+            Direction::South => pos[1] < self.grid_size[1] - 1,
+            Direction::West => pos[0] > 0,
         };
 
         match valid {
             true => Some(match direction {
-                ShipDirection::North => [pos[0], pos[1] - 1],
-                ShipDirection::East => [pos[0] + 1, pos[1]],
-                ShipDirection::South => [pos[0], pos[1] + 1],
-                ShipDirection::West => [pos[0] - 1, pos[1]],
+                Direction::North => [pos[0], pos[1] - 1],
+                Direction::East => [pos[0] + 1, pos[1]],
+                Direction::South => [pos[0], pos[1] + 1],
+                Direction::West => [pos[0] - 1, pos[1]],
             }),
             false => None,
         }
@@ -399,7 +397,7 @@ impl Player {
     fn find_unchecked_space(
         &self,
         pos: &[u8; 2],
-        direction: ShipDirection,
+        direction: Direction,
         check_for_line: bool
     ) -> Option<[u8; 2]> {
         let mut check_pos = self.movement(pos, direction);
@@ -432,7 +430,7 @@ impl Player {
     }
 
     /// Moves the player's grid cursor in the given `direction` if possible.
-    pub fn move_grid_cursor(&mut self, direction: ShipDirection) {
+    pub fn move_grid_cursor(&mut self, direction: Direction) {
         if let Some(new_cursor) = self.movement(&self.grid_cursor, direction) {
             self.set_grid_cursor(&new_cursor);
         }
