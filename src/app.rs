@@ -340,7 +340,7 @@ impl<'a> App<'a> {
             self.game.active_player_mut().move_temp_ship(direction);
         }
 
-        if self.game.is_player_selecting_space() {
+        if self.game.is_player_selecting_space() && self.turn_active {
             self.game.active_player_mut().move_grid_cursor(direction);
         }
     }
