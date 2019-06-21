@@ -44,13 +44,23 @@ impl Player {
         }
     }
 
-    /// Selects a space and checks the status of ships if there's a hit.
-    pub fn select_space(&mut self, pos: &[u8; 2]) -> GameState {
+    /// Selects a space if it hasn't already been selected.
+    pub fn select_space(&mut self, pos: &[u8; 2]) -> bool {
+        let space_index = self.space_index(pos);
+        let unchecked = self.spaces[space_index].is_unchecked();
+
+        if unchecked {
+            let ship_hit = self.ships.iter().position(|s| s.pos().contains(pos));
+            self.spaces[space_index].set_checked(ship_hit.is_some());
+        }
+
+        unchecked
+    }
+
+    /// Checks the player's ships' status and returns the game state.
+    pub fn check_ships(&mut self, pos: &[u8; 2]) -> GameState {
         let mut game_state = GameState::Active;
         let ship_hit = self.ships.iter().position(|s| s.pos().contains(pos));
-
-        let space_index = self.space_index(pos);
-        self.spaces[space_index].set_checked(ship_hit.is_some());
 
         if let Some(ship) = ship_hit {
             let ship_sunk = self.ships[ship].pos().iter()
@@ -61,6 +71,7 @@ impl Player {
             }
 
             let all_sunk = self.ships.iter().all(|s| !s.is_active());
+
             if all_sunk {
                 game_state = GameState::Over;
             }

@@ -288,8 +288,7 @@ impl<'a> App<'a> {
             self.game.active_player_mut().place_temp_ship();
         }
 
-        if self.game.is_player_selecting_space() {
-            self.game.select_opponent_space(grid_pos);
+        if self.game.is_player_selecting_space() && self.game.select_opponent_space(grid_pos) {
             self.turn_active = false;
         }
     }
