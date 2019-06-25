@@ -238,23 +238,13 @@ impl Player {
 
     /// RNGs ship locations for CPU players.
     fn cpu_place_ship(&self, length: u8) -> Vec<[u8; 2]> {
-        let mut rng = thread_rng();
-
         // RNG a position and direction, then make sure it's valid.
         loop {
             let pos = self.rng_pos();
-            let direction = match rng.gen_range(0, 4) {
-                0 => Direction::North,
-                1 => Direction::East,
-                2 => Direction::South,
-                3 => Direction::West,
-                _ => unreachable!()
-            };
+            let direction = Direction::random();
 
             if let Some(s) = self.get_ship_position(pos, direction, length) {
-                let valid = self.valid_ship_position(&s);
-
-                if valid {
+                if self.valid_ship_position(&s) {
                     break s;
                 }
             }
