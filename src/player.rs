@@ -57,24 +57,35 @@ impl Player {
         unchecked
     }
 
-    /// Checks the player's ships' status and returns the game state.
-    pub fn check_ships(&mut self, pos: &[u8; 2]) -> GameState {
-        let mut game_state = GameState::Active;
-        let ship_hit = self.ships.iter().position(|s| s.pos().contains(pos));
+    /// Checks whether a ship at the given position is sunk.
+    ///
+    /// If all spaces have been hit but the ship has not been set to sunk, then
+    /// it will be sunk on execution of this method.
+    pub fn is_ship_sunk_by_pos(&mut self, pos: &[u8; 2]) -> bool {
+        // TODO return Result; send error if no ship at pos
+        let hit_ship = self.ships.iter().position(|s| s.pos().contains(pos));
+        let mut ship_sunk = false;
 
-        if let Some(ship) = ship_hit {
-            let ship_sunk = self.ships[ship].pos().iter()
+        if let Some(ship) = hit_ship {
+            ship_sunk = self.ships[ship].pos()
+                .iter()
                 .all(|p| self.space(p).is_hit());
 
-            if ship_sunk {
+            if ship_sunk && self.ships[ship].is_active() {
                 self.ships[ship].sink();
             }
+        }
 
-            let all_sunk = self.ships.iter().all(|s| !s.is_active());
+        ship_sunk
+    }
 
-            if all_sunk {
-                game_state = GameState::Over;
-            }
+    /// Checks the player's ships' status and returns the game state.
+    pub fn check_ships(&self) -> GameState {
+        let mut game_state = GameState::Active;
+        let all_sunk = self.ships.iter().all(|s| !s.is_active());
+
+        if all_sunk {
+            game_state = GameState::Over;
         }
 
         game_state

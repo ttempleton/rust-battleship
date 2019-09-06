@@ -101,8 +101,8 @@ impl<'a> Game<'a> {
         let ref mut opponent = self.players[self.not_turn()];
         let selected = opponent.space(pos).is_unchecked() && opponent.select_space(pos);
 
-        if selected {
-            self.state = opponent.check_ships(pos);
+        if selected && opponent.is_ship_sunk_by_pos(pos) {
+            self.state = opponent.check_ships();
         }
 
         selected
