@@ -102,7 +102,10 @@ impl<'a> Game<'a> {
         let selected = opponent.space(pos).is_unchecked() && opponent.select_space(pos);
 
         if selected && opponent.is_ship_sunk_by_pos(pos) {
-            self.state = opponent.check_ships();
+            self.state = match opponent.all_ships_sunk() {
+                true => GameState::Over,
+                false => GameState::Active,
+            };
         }
 
         selected

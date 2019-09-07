@@ -6,7 +6,6 @@ use rand::{
 };
 use crate::{
     direction::Direction,
-    game::GameState,
     ship::Ship,
     space::Space,
 };
@@ -79,16 +78,9 @@ impl Player {
         ship_sunk
     }
 
-    /// Checks the player's ships' status and returns the game state.
-    pub fn check_ships(&self) -> GameState {
-        let mut game_state = GameState::Active;
-        let all_sunk = self.ships.iter().all(|s| !s.is_active());
-
-        if all_sunk {
-            game_state = GameState::Over;
-        }
-
-        game_state
+    /// Returns whether all of the player's ships have been sunk.
+    pub fn all_ships_sunk(&self) -> bool {
+        self.ships.iter().all(|ship| !ship.is_active())
     }
 
     /// Determines the next space a CPU player will select.
