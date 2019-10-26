@@ -1,13 +1,13 @@
 pub struct Ship {
-    state: bool,
+    state: ShipState,
     position: Vec<[u8; 2]>,
 }
 
 impl Ship {
     pub fn new(pos: Vec<[u8; 2]>) -> Ship {
         Ship {
-            state: true,
-            position: pos
+            state: ShipState::Active,
+            position: pos,
         }
     }
 
@@ -16,11 +16,18 @@ impl Ship {
     }
 
     pub fn is_active(&self) -> bool {
-        self.state
+        self.state == ShipState::Active
     }
 
     pub fn sink(&mut self) {
-        self.state = false;
+        self.state = ShipState::Sunk;
     }
+}
+
+#[derive(PartialEq)]
+enum ShipState {
+    Placement,
+    Active,
+    Sunk
 }
 
