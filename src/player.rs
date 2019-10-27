@@ -80,7 +80,7 @@ impl Player {
 
     /// Returns whether all of the player's ships have been sunk.
     pub fn all_ships_sunk(&self) -> bool {
-        self.ships.iter().all(|ship| !ship.is_active())
+        self.ships.iter().all(|ship| ship.is_sunk())
     }
 
     /// Determines the next space a CPU player will select.

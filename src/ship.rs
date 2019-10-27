@@ -19,6 +19,10 @@ impl Ship {
         self.state == ShipState::Active
     }
 
+    pub fn is_sunk(&self) -> bool {
+        self.state == ShipState::Sunk
+    }
+
     pub fn sink(&mut self) {
         self.state = ShipState::Sunk;
     }
