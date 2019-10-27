@@ -87,12 +87,7 @@ impl Player {
     pub fn cpu_select_space(&self) -> [u8; 2] {
         let mut rng = thread_rng();
         let mut select = Vec::new();
-        let mut directions = [
-            Direction::North,
-            Direction::East,
-            Direction::South,
-            Direction::West
-        ];
+        let mut directions = Direction::all();
 
         directions.shuffle(&mut rng);
 

@@ -18,6 +18,15 @@ impl Direction {
         }
     }
 
+    pub fn all() -> [Direction; 4] {
+        [
+            Direction::North,
+            Direction::East,
+            Direction::South,
+            Direction::West,
+        ]
+    }
+
     pub fn random() -> Direction {
         match thread_rng().gen_range(0, 4) {
             0 => Direction::North,
