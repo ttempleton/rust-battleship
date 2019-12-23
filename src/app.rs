@@ -5,7 +5,7 @@ use std::{
 use piston_window::*;
 use crate::{
     direction::Direction,
-    game::*,
+    game::Game,
     settings::Settings,
 };
 
