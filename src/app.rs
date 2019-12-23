@@ -115,10 +115,12 @@ impl<'a> App<'a> {
 
             if e.render_args().is_some() {
                 let current_player = self.game.active_player();
-                let game_state = self.game.state();
-                let shown_player = match game_state {
-                    GameState::ShipPlacement => current_player,
-                    _ => self.game.inactive_player()
+                let game_state_placement = self.game.is_state_placement();
+                let game_state_active = self.game.is_state_active();
+                let game_state_complete = self.game.is_state_complete();
+                let shown_player = match game_state_placement {
+                    true => current_player,
+                    false => self.game.inactive_player()
                 };
 
                 let space_size_u32 = self.game.settings.space_size as u32;
@@ -153,7 +155,7 @@ impl<'a> App<'a> {
 
                         // Only show ship locations during ship placement or if the
                         // current player is computer-controlled.
-                        if shown_player.ship_is_in_space(space_pos) && (game_state == GameState::ShipPlacement || (space.is_unchecked() && current_player.is_cpu)) {
+                        if shown_player.ship_is_in_space(space_pos) && (game_state_placement || (space.is_unchecked() && current_player.is_cpu)) {
                             image(&space_textures[3], transform, g);
                         } else {
                             let space_state = if space.is_unchecked() {
@@ -169,7 +171,7 @@ impl<'a> App<'a> {
 
                     // During ship placement, show the temporary position of the
                     // next ship to be placed.
-                    if game_state == GameState::ShipPlacement {
+                    if game_state_placement {
                         for pos in &shown_player.temp_ship_pos {
                             let transform = c.transform.trans(
                                 (space_size_u32 * pos[0] as u32 + grid_area[0]) as f64,
@@ -180,7 +182,7 @@ impl<'a> App<'a> {
                     }
 
                     // During the game, show the player's grid cursor.
-                    if game_state == GameState::Active && turn_end_timer == 0.0 && !current_player.is_cpu {
+                    if game_state_active && turn_end_timer == 0.0 && !current_player.is_cpu {
                         let grid_cursor = current_player.get_grid_cursor();
                         let transform = c.transform.trans(
                             (space_size_u32 * grid_cursor[0] as u32 + grid_area[0]) as f64,
@@ -203,10 +205,9 @@ impl<'a> App<'a> {
                     // During turn transitions / game over, cover the window with
                     // a black rectangle of increasing opacity.
                     if !turn_active && turn_end_timer >= 0.75 {
-                        let alpha = if game_state != GameState::Over {
-                            (turn_end_timer as f32 - 0.75) / 0.75
-                        } else {
-                            (turn_end_timer as f32 - 0.75) / 1.125
+                        let alpha = match game_state_complete {
+                            true => (turn_end_timer as f32 - 0.75) / 1.125,
+                            false => (turn_end_timer as f32 - 0.75) / 0.75,
                         };
                         rectangle(
                             [0.0, 0.0, 0.0, alpha],
@@ -241,10 +242,9 @@ impl<'a> App<'a> {
     }
 
     fn update(&mut self, u: &UpdateArgs) {
-        let state = self.game.state();
         let active_player_is_cpu = self.game.is_active_player_cpu();
 
-        if state == GameState::ShipPlacement {
+        if self.game.is_state_placement() {
             if active_player_is_cpu {
                 self.game.active_player_mut().cpu_place_ships();
             }
@@ -257,12 +257,12 @@ impl<'a> App<'a> {
             if self.game.active_player().ships().len() == 4 && self.game.inactive_player().ships().len() == 4 {
                 self.game.start();
             }
-        } else if state == GameState::Active || state == GameState::Over {
+        } else {
             if !self.turn_active {
                 // Continue/end the end-of-turn delay.
                 if self.turn_end_timer < 1.5 {
                     self.turn_end_timer += u.dt;
-                } else if state == GameState::Active {
+                } else if self.game.is_state_active() {
                     self.game.switch_turn();
                     self.turn_end_timer = 0.0;
                     self.turn_active = true;
@@ -350,10 +350,11 @@ impl<'a> App<'a> {
 
         if let Some(grid_pos) = self.mouse_cursor_grid_position() {
             let is_player_turn = self.game.is_player_turn();
-            let game_state = self.game.state();
+            let game_state_placement = self.game.is_state_placement();
+            let game_state_active = self.game.is_state_active();
             let ref mut player = self.game.active_player_mut();
 
-            if game_state == GameState::ShipPlacement {
+            if game_state_placement {
                 if let Some(ship) = player.get_ship_position(
                     grid_pos,
                     player.temp_ship_dir,
@@ -361,9 +362,7 @@ impl<'a> App<'a> {
                 ) {
                     player.temp_ship_pos = ship;
                 }
-            }
-
-            if game_state == GameState::Active && is_player_turn {
+            } else if game_state_active && is_player_turn {
                 player.set_grid_cursor(&grid_pos);
             }
         }

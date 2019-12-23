@@ -43,9 +43,19 @@ impl<'a> Game<'a> {
         &mut self.players[self.turn as usize]
     }
 
-    /// Returns the current game state.
-    pub fn state(&self) -> GameState {
-        self.state
+    /// Returns whether the game's current state is ship placement.
+    pub fn is_state_placement(&self) -> bool {
+        self.state == GameState::ShipPlacement
+    }
+
+    /// Returns whether the game's current state is active.
+    pub fn is_state_active(&self) -> bool {
+        self.state == GameState::Active
+    }
+
+    /// Returns whether the game's current state is complete.
+    pub fn is_state_complete(&self) -> bool {
+        self.state == GameState::Over
     }
 
     /// Starts the game by setting the game state to active.
