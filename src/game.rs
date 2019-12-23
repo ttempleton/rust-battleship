@@ -23,7 +23,7 @@ impl<'a> Game<'a> {
                 Player::new(grid_size, false),
                 Player::new(grid_size, true)
             ],
-            state: GameState::ShipPlacement,
+            state: GameState::Placement,
             turn: 0,
         }
     }
@@ -45,7 +45,7 @@ impl<'a> Game<'a> {
 
     /// Returns whether the game's current state is ship placement.
     pub fn is_state_placement(&self) -> bool {
-        self.state == GameState::ShipPlacement
+        self.state == GameState::Placement
     }
 
     /// Returns whether the game's current state is active.
@@ -85,7 +85,7 @@ impl<'a> Game<'a> {
 
     /// Returns whether a human player is currently placing ships.
     pub fn is_player_placing_ship(&self) -> bool {
-        self.state == GameState::ShipPlacement && self.is_player_turn()
+        self.state == GameState::Placement && self.is_player_turn()
     }
 
     /// Returns whether a human player is currently selecting a space.
@@ -124,7 +124,7 @@ impl<'a> Game<'a> {
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum GameState {
-    ShipPlacement,
+    Placement,
     Active,
     Over
 }
