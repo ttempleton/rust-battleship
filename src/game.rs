@@ -55,7 +55,7 @@ impl<'a> Game<'a> {
 
     /// Returns whether the game's current state is complete.
     pub fn is_state_complete(&self) -> bool {
-        self.state == GameState::Over
+        self.state == GameState::Complete
     }
 
     /// Starts the game by setting the game state to active.
@@ -101,7 +101,7 @@ impl<'a> Game<'a> {
     /// Returns as `usize` the winner, if there is one.
     pub fn get_winner(&self) -> Option<usize> {
         match self.state {
-            GameState::Over => Some(self.turn as usize),
+            GameState::Complete => Some(self.turn as usize),
             _ => None
         }
     }
@@ -113,7 +113,7 @@ impl<'a> Game<'a> {
 
         if selected && opponent.is_ship_sunk_by_pos(pos) {
             self.state = match opponent.all_ships_sunk() {
-                true => GameState::Over,
+                true => GameState::Complete,
                 false => GameState::Active,
             };
         }
@@ -126,6 +126,6 @@ impl<'a> Game<'a> {
 pub enum GameState {
     Placement,
     Active,
-    Over
+    Complete,
 }
 
