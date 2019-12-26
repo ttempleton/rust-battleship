@@ -43,17 +43,11 @@ impl Player {
         }
     }
 
-    /// Selects a space if it hasn't already been selected.
-    pub fn select_space(&mut self, pos: &[u8; 2]) -> bool {
+    /// Selects a space.
+    pub fn select_space(&mut self, pos: &[u8; 2]) {
         let space_index = self.space_index(pos);
-        let unchecked = self.spaces[space_index].is_unchecked();
-
-        if unchecked {
-            let ship_hit = self.ships.iter().position(|s| s.pos().contains(pos));
-            self.spaces[space_index].set_checked(ship_hit.is_some());
-        }
-
-        unchecked
+        let ship_hit = self.ships.iter().position(|s| s.pos().contains(pos));
+        self.spaces[space_index].set_checked(ship_hit.is_some());
     }
 
     /// Checks whether a ship at the given position is sunk.

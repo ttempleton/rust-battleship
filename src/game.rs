@@ -109,16 +109,20 @@ impl<'a> Game<'a> {
     /// Selects a position on the opponent's grid if it is unchecked.
     pub fn select_opponent_space(&mut self, pos: &[u8; 2]) -> bool {
         let ref mut opponent = self.players[self.not_turn()];
-        let selected = opponent.space(pos).is_unchecked() && opponent.select_space(pos);
+        let unchecked = opponent.space(pos).is_unchecked();
 
-        if selected && opponent.is_ship_sunk_by_pos(pos) {
-            self.state = match opponent.all_ships_sunk() {
-                true => GameState::Complete,
-                false => GameState::Active,
-            };
+        if unchecked {
+            opponent.select_space(pos);
+
+            if opponent.is_ship_sunk_by_pos(pos) {
+                self.state = match opponent.all_ships_sunk() {
+                    true => GameState::Complete,
+                    false => GameState::Active,
+                };
+            }
         }
 
-        selected
+        unchecked
     }
 }
 
