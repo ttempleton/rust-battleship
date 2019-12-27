@@ -80,7 +80,7 @@ impl<'a> Game<'a> {
 
     /// Returns whether it is currently a human player's turn.
     pub fn is_player_turn(&self) -> bool {
-        !self.players[self.turn as usize].is_cpu
+        !self.players[self.turn as usize].is_cpu()
     }
 
     /// Returns whether a human player is currently placing ships.
@@ -95,7 +95,7 @@ impl<'a> Game<'a> {
 
     /// Returns whether the active player is CPU-controlled.
     pub fn is_active_player_cpu(&self) -> bool {
-        self.players[self.turn as usize].is_cpu
+        self.players[self.turn as usize].is_cpu()
     }
 
     /// Returns as `usize` the winner, if there is one.

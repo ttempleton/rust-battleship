@@ -11,7 +11,7 @@ use crate::{
 };
 
 pub struct Player {
-    pub is_cpu: bool,
+    is_cpu: bool,
     spaces: Vec<Space>,
     ships: Vec<Ship>,
     grid_size: [u8; 2],
@@ -432,6 +432,10 @@ impl Player {
     /// Sets the player's grid cursor coordinates.
     pub fn set_grid_cursor(&mut self, new_cursor: &[u8; 2]) {
         self.grid_cursor = *new_cursor;
+    }
+
+    pub fn is_cpu(&self) -> bool {
+        self.is_cpu
     }
 }
 

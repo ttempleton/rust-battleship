@@ -155,7 +155,7 @@ impl<'a> App<'a> {
 
                         // Only show ship locations during ship placement or if the
                         // current player is computer-controlled.
-                        if shown_player.ship_is_in_space(space_pos) && (game_state_placement || (space.is_unchecked() && current_player.is_cpu)) {
+                        if shown_player.ship_is_in_space(space_pos) && (game_state_placement || (space.is_unchecked() && current_player.is_cpu())) {
                             image(&space_textures[3], transform, g);
                         } else {
                             let space_state = if space.is_unchecked() {
@@ -182,7 +182,7 @@ impl<'a> App<'a> {
                     }
 
                     // During the game, show the player's grid cursor.
-                    if game_state_active && turn_end_timer == 0.0 && !current_player.is_cpu {
+                    if game_state_active && turn_end_timer == 0.0 && !current_player.is_cpu() {
                         let grid_cursor = current_player.get_grid_cursor();
                         let transform = c.transform.trans(
                             (space_size_u32 * grid_cursor[0] as u32 + grid_area[0]) as f64,
