@@ -16,8 +16,8 @@ pub struct Player {
     ships: Vec<Ship>,
     grid_size: [u8; 2],
     grid_cursor: [u8; 2],
-    pub temp_ship_pos: Vec<[u8; 2]>,
-    pub temp_ship_dir: Direction,
+    temp_ship_pos: Vec<[u8; 2]>,
+    temp_ship_dir: Direction,
 }
 
 impl Player {
@@ -436,6 +436,18 @@ impl Player {
 
     pub fn is_cpu(&self) -> bool {
         self.is_cpu
+    }
+
+    pub fn temp_ship_pos(&self) -> &[[u8; 2]] {
+        &self.temp_ship_pos
+    }
+
+    pub fn set_temp_ship_pos(&mut self, ship: Vec<[u8; 2]>) {
+        self.temp_ship_pos = ship;
+    }
+
+    pub fn temp_ship_dir(&self) -> Direction {
+        self.temp_ship_dir
     }
 }
 
