@@ -242,7 +242,7 @@ impl<'a> App<'a> {
     }
 
     fn update(&mut self, u: &UpdateArgs) {
-        let active_player_is_cpu = self.game.is_active_player_cpu();
+        let active_player_is_cpu = self.game.active_player().is_cpu();
 
         if self.game.is_state_placement() {
             if active_player_is_cpu {

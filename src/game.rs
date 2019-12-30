@@ -21,7 +21,7 @@ impl<'a> Game<'a> {
             settings: &settings,
             players: [
                 Player::new(grid_size, false),
-                Player::new(grid_size, true)
+                Player::new(grid_size, true),
             ],
             state: GameState::Placement,
             turn: 0,
@@ -91,11 +91,6 @@ impl<'a> Game<'a> {
     /// Returns whether a human player is currently selecting a space.
     pub fn is_player_selecting_space(&self) -> bool {
         self.state == GameState::Active && self.is_player_turn()
-    }
-
-    /// Returns whether the active player is CPU-controlled.
-    pub fn is_active_player_cpu(&self) -> bool {
-        self.players[self.turn as usize].is_cpu()
     }
 
     /// Returns as `usize` the winner, if there is one.
