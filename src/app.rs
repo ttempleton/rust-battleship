@@ -349,10 +349,10 @@ impl<'a> App<'a> {
         self.mouse_cursor = *c;
 
         if let Some(grid_pos) = self.mouse_cursor_grid_position() {
-            let is_player_turn = self.game.is_player_turn();
             let game_state_placement = self.game.is_state_placement();
             let game_state_active = self.game.is_state_active();
             let ref mut player = self.game.active_player_mut();
+            let is_human_turn = !player.is_cpu();
 
             if game_state_placement {
                 if let Some(ship) = player.get_ship_position(
@@ -362,7 +362,7 @@ impl<'a> App<'a> {
                 ) {
                     player.set_temp_ship_pos(ship);
                 }
-            } else if game_state_active && is_player_turn {
+            } else if game_state_active && is_human_turn {
                 player.set_grid_cursor(&grid_pos);
             }
         }

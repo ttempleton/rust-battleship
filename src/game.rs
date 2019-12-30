@@ -78,19 +78,14 @@ impl<'a> Game<'a> {
         self.turn = self.not_turn() as u8;
     }
 
-    /// Returns whether it is currently a human player's turn.
-    pub fn is_player_turn(&self) -> bool {
-        !self.players[self.turn as usize].is_cpu()
-    }
-
     /// Returns whether a human player is currently placing ships.
     pub fn is_player_placing_ship(&self) -> bool {
-        self.state == GameState::Placement && self.is_player_turn()
+        self.state == GameState::Placement && !self.active_player().is_cpu()
     }
 
     /// Returns whether a human player is currently selecting a space.
     pub fn is_player_selecting_space(&self) -> bool {
-        self.state == GameState::Active && self.is_player_turn()
+        self.state == GameState::Active && !self.active_player().is_cpu()
     }
 
     /// Returns as `usize` the winner, if there is one.
