@@ -15,6 +15,10 @@ impl Ship {
         &self.position
     }
 
+    pub fn len(&self) -> usize {
+        self.position.len()
+    }
+
     pub fn is_active(&self) -> bool {
         self.state == ShipState::Active
     }
