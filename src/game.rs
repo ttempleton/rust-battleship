@@ -96,8 +96,8 @@ impl<'a> Game<'a> {
         }
     }
 
-    /// Selects a position on the opponent's grid if it is unchecked.
-    pub fn select_opponent_space(&mut self, pos: &[u8; 2]) -> bool {
+    /// Selects a space on the inactive player's grid if it's unchecked.
+    pub fn select_space(&mut self, pos: &[u8; 2]) -> bool {
         let ref mut opponent = self.players[self.not_turn()];
         let unchecked = opponent.space(pos).is_unchecked();
 

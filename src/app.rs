@@ -275,7 +275,7 @@ impl<'a> App<'a> {
 
                 if self.cpu_turn_timer >= 1.0 {
                     let cpu_space = self.game.inactive_player().cpu_select_space();
-                    self.game.select_opponent_space(&cpu_space);
+                    self.game.select_space(&cpu_space);
                     self.cpu_turn_timer = 0.0;
                     self.turn_active = false;
                 }
@@ -288,7 +288,7 @@ impl<'a> App<'a> {
             self.game.active_player_mut().place_temp_ship();
         }
 
-        if self.game.is_player_selecting_space() && self.game.select_opponent_space(grid_pos) {
+        if self.game.is_player_selecting_space() && self.game.select_space(grid_pos) {
             self.turn_active = false;
         }
     }
