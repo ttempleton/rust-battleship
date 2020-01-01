@@ -357,7 +357,7 @@ impl<'a> App<'a> {
             if game_state_placement {
                 if let Some(ship) = player.get_ship_position(
                     grid_pos,
-                    player.temp_ship_dir(),
+                    player.temp_ship().dir(),
                     player.ships().len() as u8 + 2
                 ) {
                     player.set_temp_ship_pos(ship);

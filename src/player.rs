@@ -441,9 +441,5 @@ impl Player {
     pub fn set_temp_ship_pos(&mut self, ship: Vec<[u8; 2]>) {
         self.temp_ship = Ship::new(ship, self.temp_ship.dir());
     }
-
-    pub fn temp_ship_dir(&self) -> Direction {
-        self.temp_ship.dir()
-    }
 }
 
