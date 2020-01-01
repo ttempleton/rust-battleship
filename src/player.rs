@@ -17,7 +17,6 @@ pub struct Player {
     grid_size: [u8; 2],
     grid_cursor: [u8; 2],
     temp_ship: Ship,
-    temp_ship_dir: Direction,
 }
 
 impl Player {
@@ -38,8 +37,7 @@ impl Player {
             ships: vec![],
             grid_size: grid_size,
             grid_cursor: [0, 0],
-            temp_ship: Ship::new(vec![[0, 0], [1, 0]]),
-            temp_ship_dir: Direction::West,
+            temp_ship: Ship::new(vec![[0, 0], [1, 0]], Direction::West),
         }
     }
 
@@ -159,10 +157,10 @@ impl Player {
         if let Some(new_head) = self.movement(&old_head, direction) {
             if let Some(ship) = self.get_ship_position(
                 new_head,
-                self.temp_ship_dir,
+                self.temp_ship.dir(),
                 self.temp_ship.len() as u8
             ) {
-                self.temp_ship = Ship::new(ship);
+                self.temp_ship = Ship::new(ship, self.temp_ship.dir());
             }
         }
     }
@@ -171,21 +169,20 @@ impl Player {
         let ship = self.temp_ship.pos().clone();
 
         if self.valid_ship_position(&ship) {
-            self.ships.push(Ship::new(ship.to_vec()));
+            self.ships.push(Ship::new(ship.to_vec(), self.temp_ship.dir()));
 
-            self.temp_ship_dir = Direction::West;
             self.temp_ship = Ship::new(self.get_ship_position(
                 [0, 0],
-                self.temp_ship_dir,
+                Direction::West,
                 self.ships[self.ships.len() - 1].len() as u8 + 1
-            ).unwrap());
+            ).unwrap(), Direction::West);
         }
     }
 
     /// Rotates a ship during the ship placement game state.
     pub fn rotate_temp_ship(&mut self) {
         let ship_len = self.temp_ship.len() as u8;
-        let dir = match self.temp_ship_dir {
+        let dir = match self.temp_ship.dir() {
             Direction::North => Direction::East,
             Direction::East => Direction::South,
             Direction::South => Direction::West,
@@ -216,20 +213,19 @@ impl Player {
         };
 
         if let Some(ship) = self.get_ship_position(start_pos, dir, ship_len) {
-            self.temp_ship = Ship::new(ship);
-            self.temp_ship_dir = dir;
+            self.temp_ship = Ship::new(ship, dir);
         }
     }
 
     pub fn cpu_place_ships(&mut self) {
         for length in 2..6 {
-            let ship_pos = self.cpu_place_ship(length);
-            self.ships.push(Ship::new(ship_pos));
+            let (pos, dir) = self.cpu_place_ship(length);
+            self.ships.push(Ship::new(pos, dir));
         }
     }
 
     /// RNGs ship locations for CPU players.
-    fn cpu_place_ship(&self, length: u8) -> Vec<[u8; 2]> {
+    fn cpu_place_ship(&self, length: u8) -> (Vec<[u8; 2]>, Direction) {
         // RNG a position and direction, then make sure it's valid.
         loop {
             let pos = self.rng_pos();
@@ -237,7 +233,7 @@ impl Player {
 
             if let Some(s) = self.get_ship_position(pos, direction, length) {
                 if self.valid_ship_position(&s) {
-                    break s;
+                    break (s, direction);
                 }
             }
         }
@@ -443,11 +439,11 @@ impl Player {
     }
 
     pub fn set_temp_ship_pos(&mut self, ship: Vec<[u8; 2]>) {
-        self.temp_ship = Ship::new(ship);
+        self.temp_ship = Ship::new(ship, self.temp_ship.dir());
     }
 
     pub fn temp_ship_dir(&self) -> Direction {
-        self.temp_ship_dir
+        self.temp_ship.dir()
     }
 }
 
