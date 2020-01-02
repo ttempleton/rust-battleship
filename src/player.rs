@@ -434,7 +434,7 @@ impl Player {
         self.is_cpu
     }
 
-    pub fn temp_ship(&self) -> &Ship {
+    pub fn placement_ship(&self) -> &Ship {
         &self.temp_ship
     }
 

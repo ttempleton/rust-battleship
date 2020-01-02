@@ -172,7 +172,7 @@ impl<'a> App<'a> {
                     // During ship placement, show the temporary position of the
                     // next ship to be placed.
                     if game_state_placement {
-                        for pos in shown_player.temp_ship().pos() {
+                        for pos in shown_player.placement_ship().pos() {
                             let transform = c.transform.trans(
                                 (space_size_u32 * pos[0] as u32 + grid_area[0]) as f64,
                                 (space_size_u32 * pos[1] as u32 + grid_area[1]) as f64,
@@ -357,7 +357,7 @@ impl<'a> App<'a> {
             if game_state_placement {
                 if let Some(ship) = player.get_ship_position(
                     grid_pos,
-                    player.temp_ship().dir(),
+                    player.placement_ship().dir(),
                     player.ships().len() as u8 + 2
                 ) {
                     player.set_temp_ship_pos(ship);
