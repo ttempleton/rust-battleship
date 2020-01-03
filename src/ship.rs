@@ -47,8 +47,18 @@ impl Ship {
     }
 
     /// Sets the ship as having been sunk.
-    pub fn set_sunk(&mut self) {
-        self.state = ShipState::Sunk;
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the ship's state is not `ShipState::Active`.
+    pub fn set_sunk(&mut self) -> Result<(), &'static str> {
+        if self.state != ShipState::Active {
+            Err("tried to sink a ship that was not active")
+        } else {
+            self.state = ShipState::Sunk;
+
+            Ok(())
+        }
     }
 }
 
