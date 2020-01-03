@@ -360,10 +360,10 @@ impl<'a> App<'a> {
                     player.placement_ship().dir(),
                     player.ships().len() as u8 + 2
                 ) {
-                    if player.placement_ship_mut().set_pos(ship).is_err() {
-                        // Should never happen if the position was valid
-                        panic!("tried to set placement ship to invalid position");
-                    }
+                    // `set_pos()` will return an error if the position was invalid
+                    player.placement_ship_mut()
+                        .set_pos(ship)
+                        .expect("tried to set placement ship to invalid position");
                 }
             } else if game_state_active && is_human_turn {
                 player.set_grid_cursor(&grid_pos);
