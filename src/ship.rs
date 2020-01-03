@@ -7,7 +7,9 @@ pub struct Ship {
 }
 
 impl Ship {
-    pub fn new(pos: Vec<[u8; 2]>, dir: Direction) -> Ship {
+    pub fn new(pos: Vec<[u8; 2]>) -> Ship {
+        let dir = Direction::from_positions(&pos[1], &pos[0]).unwrap();
+
         Ship {
             state: ShipState::Active,
             position: pos,

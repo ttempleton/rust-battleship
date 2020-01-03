@@ -37,7 +37,7 @@ impl Player {
             ships: vec![],
             grid_size: grid_size,
             grid_cursor: [0, 0],
-            temp_ship: Ship::new(vec![[0, 0], [1, 0]], Direction::West),
+            temp_ship: Ship::new(vec![[0, 0], [1, 0]]),
         }
     }
 
@@ -160,7 +160,7 @@ impl Player {
                 self.temp_ship.dir(),
                 self.temp_ship.len() as u8
             ) {
-                self.temp_ship = Ship::new(ship, self.temp_ship.dir());
+                self.temp_ship = Ship::new(ship);
             }
         }
     }
@@ -169,13 +169,13 @@ impl Player {
         let ship = self.temp_ship.pos().clone();
 
         if self.valid_ship_position(&ship) {
-            self.ships.push(Ship::new(ship.to_vec(), self.temp_ship.dir()));
+            self.ships.push(Ship::new(ship.to_vec()));
 
             self.temp_ship = Ship::new(self.get_ship_position(
                 [0, 0],
                 Direction::West,
                 self.ships[self.ships.len() - 1].len() as u8 + 1
-            ).unwrap(), Direction::West);
+            ).unwrap());
         }
     }
 
@@ -213,19 +213,19 @@ impl Player {
         };
 
         if let Some(ship) = self.get_ship_position(start_pos, dir, ship_len) {
-            self.temp_ship = Ship::new(ship, dir);
+            self.temp_ship = Ship::new(ship);
         }
     }
 
     pub fn cpu_place_ships(&mut self) {
         for length in 2..6 {
-            let (pos, dir) = self.cpu_place_ship(length);
-            self.ships.push(Ship::new(pos, dir));
+            let pos = self.cpu_place_ship(length);
+            self.ships.push(Ship::new(pos));
         }
     }
 
     /// RNGs ship locations for CPU players.
-    fn cpu_place_ship(&self, length: u8) -> (Vec<[u8; 2]>, Direction) {
+    fn cpu_place_ship(&self, length: u8) -> Vec<[u8; 2]> {
         // RNG a position and direction, then make sure it's valid.
         loop {
             let pos = self.rng_pos();
@@ -233,7 +233,7 @@ impl Player {
 
             if let Some(s) = self.get_ship_position(pos, direction, length) {
                 if self.valid_ship_position(&s) {
-                    break (s, direction);
+                    break s;
                 }
             }
         }
