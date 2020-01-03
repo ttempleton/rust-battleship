@@ -36,5 +36,25 @@ impl Direction {
             _ => unreachable!()
         }
     }
+
+    /// Returns the direction travelled from `pos1` to `pos2` if the positions
+    /// represent travel in exactly north, south, east or west direction, or
+    /// returns an error.
+    pub fn from_positions(pos1: &[u8; 2], pos2: &[u8; 2]) -> Result<Direction, &'static str> {
+        let x_diff = pos1[0] as i16 - pos2[0] as i16;
+        let y_diff = pos1[1] as i16 - pos2[1] as i16;
+
+        if x_diff == 0 && y_diff > 0 {
+            Ok(Direction::North)
+        } else if x_diff == 0 && y_diff < 0 {
+            Ok(Direction::South)
+        } else if x_diff > 0 && y_diff == 0 {
+            Ok(Direction::West)
+        } else if x_diff < 0 && y_diff == 0 {
+            Ok(Direction::East)
+        } else {
+            Err("positions do not represent a supported direction")
+        }
+    }
 }
 
