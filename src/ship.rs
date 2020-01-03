@@ -11,7 +11,7 @@ impl Ship {
         let dir = Direction::from_positions(&pos[1], &pos[0]).unwrap();
 
         Ship {
-            state: ShipState::Active,
+            state: ShipState::Placement,
             position: pos,
             dir: dir,
         }

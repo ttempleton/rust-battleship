@@ -165,18 +165,22 @@ impl Player {
         }
     }
 
-    pub fn place_temp_ship(&mut self) {
+    pub fn place_temp_ship(&mut self) -> Result<(), &'static str> {
         let ship = self.temp_ship.pos().clone();
 
         if self.valid_ship_position(&ship) {
+            let ship_index = self.ships.len();
             self.ships.push(Ship::new(ship.to_vec()));
+            self.ships[ship_index].set_active()?;
 
             self.temp_ship = Ship::new(self.get_ship_position(
                 [0, 0],
                 Direction::West,
-                self.ships[self.ships.len() - 1].len() as u8 + 1
+                self.ships[ship_index].len() as u8 + 1
             ).unwrap());
         }
+
+        Ok(())
     }
 
     /// Rotates a ship during the ship placement game state.

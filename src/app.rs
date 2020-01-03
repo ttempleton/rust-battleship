@@ -285,7 +285,9 @@ impl<'a> App<'a> {
 
     fn primary_action(&mut self, grid_pos: &[u8; 2]) {
         if self.game.is_player_placing_ship() {
-            self.game.active_player_mut().place_temp_ship();
+            self.game.active_player_mut()
+                .place_temp_ship()
+                .expect("failed to place ship");
         }
 
         if self.game.is_player_selecting_space() && self.game.select_space(grid_pos) {
