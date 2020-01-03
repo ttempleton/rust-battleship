@@ -42,6 +42,21 @@ impl Ship {
         self.state == ShipState::Active
     }
 
+    /// Sets the ship as active.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the ship's state is not `ShipState::Placement`.
+    pub fn set_active(&mut self) -> Result<(), &'static str> {
+        if self.state != ShipState::Placement {
+            Err("tried to set a ship as active that wasn't in placement state")
+        } else {
+            self.state = ShipState::Active;
+
+            Ok(())
+        }
+    }
+
     pub fn is_sunk(&self) -> bool {
         self.state == ShipState::Sunk
     }
