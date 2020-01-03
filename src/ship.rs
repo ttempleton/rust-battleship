@@ -46,7 +46,8 @@ impl Ship {
         self.state == ShipState::Sunk
     }
 
-    pub fn sink(&mut self) {
+    /// Sets the ship as having been sunk.
+    pub fn set_sunk(&mut self) {
         self.state = ShipState::Sunk;
     }
 }

@@ -63,7 +63,7 @@ impl Player {
                 .all(|p| self.space(p).is_hit());
 
             if ship_sunk && self.ships[ship].is_active() {
-                self.ships[ship].sink();
+                self.ships[ship].set_sunk();
             }
         }
 
