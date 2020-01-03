@@ -19,6 +19,15 @@ impl Ship {
         &self.position
     }
 
+    pub fn set_pos(&mut self, pos: Vec<[u8; 2]>) -> Result<(), &'static str> {
+        let dir = Direction::from_positions(&pos[1], &pos[0])?;
+
+        self.position = pos;
+        self.dir = dir;
+
+        Ok(())
+    }
+
     pub fn dir(&self) -> Direction {
         self.dir
     }
