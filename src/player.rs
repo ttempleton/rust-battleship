@@ -441,9 +441,5 @@ impl Player {
     pub fn placement_ship_mut(&mut self) -> &mut Ship {
         &mut self.temp_ship
     }
-
-    pub fn set_temp_ship_pos(&mut self, ship: Vec<[u8; 2]>) {
-        self.temp_ship = Ship::new(ship, self.temp_ship.dir());
-    }
 }
 
