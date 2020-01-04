@@ -7,6 +7,7 @@ pub struct Ship {
 }
 
 impl Ship {
+    /// Creates a new `Ship` with the given position.
     pub fn new(pos: Vec<[u8; 2]>) -> Ship {
         let dir = Direction::from_positions(&pos[1], &pos[0]).unwrap();
 
@@ -17,10 +18,16 @@ impl Ship {
         }
     }
 
+    /// Returns the ship's position.
     pub fn pos(&self) -> &[[u8; 2]] {
         &self.position
     }
 
+    /// Sets the ship's position.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `pos` does not form a vertical or horizontal line.
     pub fn set_pos(&mut self, pos: Vec<[u8; 2]>) -> Result<(), &'static str> {
         let dir = Direction::from_positions(&pos[1], &pos[0])?;
 
@@ -30,14 +37,17 @@ impl Ship {
         Ok(())
     }
 
+    /// Returns the ship's direction.
     pub fn dir(&self) -> Direction {
         self.dir
     }
 
+    /// Returns the ship's length.
     pub fn len(&self) -> usize {
         self.position.len()
     }
 
+    /// Returns whether the ship is active.
     pub fn is_active(&self) -> bool {
         self.state == ShipState::Active
     }
@@ -57,6 +67,7 @@ impl Ship {
         }
     }
 
+    /// Returns whether the ship has sunk.
     pub fn is_sunk(&self) -> bool {
         self.state == ShipState::Sunk
     }
