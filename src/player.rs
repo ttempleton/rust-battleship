@@ -42,10 +42,16 @@ impl Player {
     }
 
     /// Selects a space.
-    pub fn select_space(&mut self, pos: &[u8; 2]) {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the space at `pos` was already checked.
+    pub fn select_space(&mut self, pos: &[u8; 2]) -> Result<(), &'static str> {
         let space_index = self.space_index(pos);
         let ship_hit = self.ships.iter().position(|s| s.pos().contains(pos));
-        self.spaces[space_index].set_checked(ship_hit.is_some());
+        self.spaces[space_index].set_checked(ship_hit.is_some())?;
+
+        Ok(())
     }
 
     /// Checks whether a ship at the given position is sunk.
