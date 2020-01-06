@@ -12,8 +12,17 @@ impl Space {
     }
 
     /// Sets this space as having been checked, and whether it was hit.
-    pub fn set_checked(&mut self, hit: bool) {
-        self.state = SpaceState::Checked(hit);
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the space's state is not `SpaceState::Unchecked`.
+    pub fn set_checked(&mut self, hit: bool) -> Result<(), &'static str> {
+        if self.state != SpaceState::Unchecked {
+            Err("tried to check an already checked space")
+        } else {
+            self.state = SpaceState::Checked(hit);
+            Ok(())
+        }
     }
 
     pub fn is_unchecked(&self) -> bool {
