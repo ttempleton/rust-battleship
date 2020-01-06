@@ -107,7 +107,9 @@ impl<'a> Game<'a> {
 
         opponent.select_space(pos)?;
 
-        if opponent.is_ship_sunk_by_pos(pos) {
+        // If it's an error, no ship was at the position; and if it's false, the
+        // ship wasn't sunk
+        if opponent.sink_ship_if_all_hit(pos) == Ok(true) {
             self.state = match opponent.all_ships_sunk() {
                 true => GameState::Complete,
                 false => GameState::Active,

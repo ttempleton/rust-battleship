@@ -54,26 +54,27 @@ impl Player {
         Ok(())
     }
 
-    /// Checks whether a ship at the given position is sunk.
+    /// Sets the ship at the given position as sunk if all spaces it occupies
+    /// have been checked, and returns whether the ship was sunk.
     ///
-    /// If all spaces have been hit but the ship has not been set to sunk, then
-    /// it will be sunk on execution of this method.
-    pub fn is_ship_sunk_by_pos(&mut self, pos: &[u8; 2]) -> bool {
-        // TODO return Result; send error if no ship at pos
-        let hit_ship = self.ships.iter().position(|s| s.pos().contains(pos));
-        let mut ship_sunk = false;
-
-        if let Some(ship) = hit_ship {
-            ship_sunk = self.ships[ship].pos()
+    /// # Errors
+    ///
+    /// Returns an error if no ship is at the given position, or if the ship
+    /// state is not active.
+    pub fn sink_ship_if_all_hit(&mut self, pos: &[u8; 2]) -> Result<bool, &'static str> {
+        if let Some(index) = self.ships.iter().position(|s| s.pos().contains(pos)) {
+            let sunk = self.ships[index].pos()
                 .iter()
                 .all(|p| self.space(p).is_hit());
 
-            if ship_sunk && self.ships[ship].is_active() {
-                self.ships[ship].set_sunk();
+            if sunk {
+                self.ships[index].set_sunk()?;
             }
-        }
 
-        ship_sunk
+            Ok(sunk)
+        } else {
+            Err("no ship at the given position")
+        }
     }
 
     /// Returns whether all of the player's ships have been sunk.
