@@ -97,22 +97,24 @@ impl<'a> Game<'a> {
     }
 
     /// Selects a space on the inactive player's grid if it's unchecked.
-    pub fn select_space(&mut self, pos: &[u8; 2]) -> bool {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the inactive player's space at `pos` was already
+    /// checked.
+    pub fn select_space(&mut self, pos: &[u8; 2]) -> Result<(), &'static str> {
         let ref mut opponent = self.players[self.not_turn()];
-        let unchecked = opponent.space(pos).is_unchecked();
 
-        if unchecked {
-            opponent.select_space(pos);
+        opponent.select_space(pos)?;
 
-            if opponent.is_ship_sunk_by_pos(pos) {
-                self.state = match opponent.all_ships_sunk() {
-                    true => GameState::Complete,
-                    false => GameState::Active,
-                };
-            }
+        if opponent.is_ship_sunk_by_pos(pos) {
+            self.state = match opponent.all_ships_sunk() {
+                true => GameState::Complete,
+                false => GameState::Active,
+            };
         }
 
-        unchecked
+        Ok(())
     }
 }
 

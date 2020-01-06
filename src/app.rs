@@ -275,7 +275,8 @@ impl<'a> App<'a> {
 
                 if self.cpu_turn_timer >= 1.0 {
                     let cpu_space = self.game.inactive_player().cpu_select_space();
-                    self.game.select_space(&cpu_space);
+                    self.game.select_space(&cpu_space)
+                        .expect("CPU player tried to select a checked space");
                     self.cpu_turn_timer = 0.0;
                     self.turn_active = false;
                 }
@@ -290,7 +291,7 @@ impl<'a> App<'a> {
                 .expect("failed to place ship");
         }
 
-        if self.game.is_player_selecting_space() && self.game.select_space(grid_pos) {
+        if self.game.is_player_selecting_space() && self.game.select_space(grid_pos).is_ok() {
             self.turn_active = false;
         }
     }
