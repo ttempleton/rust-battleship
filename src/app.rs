@@ -1,11 +1,14 @@
-use crate::{direction::Direction, game::Game, settings::Settings};
+use crate::direction::Direction;
+use crate::game::Game;
+use crate::settings::{AppSettings, GameSettings};
 use piston_window::*;
 use std::{env::current_exe, path::PathBuf};
 
 pub struct App<'a> {
     window: PistonWindow,
     window_size: [u32; 2],
-    game: Game<'a>,
+    settings: &'a AppSettings,
+    game: Game,
     turn_active: bool,
     turn_end_timer: f64,
     cpu_turn_timer: f64,
@@ -14,12 +17,13 @@ pub struct App<'a> {
 }
 
 impl<'a> App<'a> {
-    pub fn new(settings: &Settings) -> App {
+    pub fn new(settings: &AppSettings) -> App {
+        let game_settings = GameSettings { spaces: [10, 10] };
         let grid_area = [
             settings.space_size,
             settings.space_size * 3,
-            settings.spaces[0] as u32 * settings.space_size,
-            settings.spaces[1] as u32 * settings.space_size,
+            game_settings.spaces[0] as u32 * settings.space_size,
+            game_settings.spaces[1] as u32 * settings.space_size,
         ];
 
         let window_size = [
@@ -37,7 +41,8 @@ impl<'a> App<'a> {
         App {
             window: window,
             window_size: window_size,
-            game: Game::new(&settings),
+            settings: &settings,
+            game: Game::new(game_settings),
             turn_active: true,
             turn_end_timer: 0.0,
             cpu_turn_timer: 0.0,
@@ -113,7 +118,7 @@ impl<'a> App<'a> {
                     false => self.game.inactive_player(),
                 };
 
-                let space_size_u32 = self.game.settings.space_size as u32;
+                let space_size_u32 = self.settings.space_size as u32;
                 let grid_area = self.grid_area;
                 let window_size = self.window_size;
                 let turn_end_timer = self.turn_end_timer;

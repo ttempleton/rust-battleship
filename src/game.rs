@@ -1,18 +1,17 @@
-use crate::{player::Player, settings::Settings};
+use crate::player::Player;
+use crate::settings::GameSettings;
 
-pub struct Game<'a> {
-    pub settings: &'a Settings,
+pub struct Game {
     players: [Player; 2],
     state: GameState,
     turn: u8,
 }
 
-impl<'a> Game<'a> {
-    pub fn new(settings: &Settings) -> Game {
+impl Game {
+    pub fn new(settings: GameSettings) -> Game {
         let grid_size = [settings.spaces[0], settings.spaces[1]];
 
         Game {
-            settings: &settings,
             players: [Player::new(grid_size, false), Player::new(grid_size, true)],
             state: GameState::Placement,
             turn: 0,

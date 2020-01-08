@@ -7,10 +7,7 @@ mod ship;
 mod space;
 
 fn main() {
-    let settings = settings::Settings {
-        space_size: 20,
-        spaces: [10, 10],
-    };
+    let settings = settings::AppSettings { space_size: 20 };
     let mut app = app::App::new(&settings);
 
     app.init();
