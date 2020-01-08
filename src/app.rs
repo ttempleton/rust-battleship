@@ -1,13 +1,6 @@
-use std::{
-    env::current_exe,
-    path::PathBuf,
-};
+use crate::{direction::Direction, game::Game, settings::Settings};
 use piston_window::*;
-use crate::{
-    direction::Direction,
-    game::Game,
-    settings::Settings,
-};
+use std::{env::current_exe, path::PathBuf};
 
 pub struct App<'a> {
     window: PistonWindow,
@@ -26,19 +19,16 @@ impl<'a> App<'a> {
             settings.space_size,
             settings.space_size * 3,
             settings.spaces[0] as u32 * settings.space_size,
-            settings.spaces[1] as u32 * settings.space_size
+            settings.spaces[1] as u32 * settings.space_size,
         ];
 
         let window_size = [
             grid_area[2] + settings.space_size * 2,
-            grid_area[3] + settings.space_size * 4
+            grid_area[3] + settings.space_size * 4,
         ];
 
         let window_title = "Battleship";
-        let window: PistonWindow = WindowSettings::new(
-            window_title,
-            window_size,
-            )
+        let window: PistonWindow = WindowSettings::new(window_title, window_size)
             .exit_on_esc(true)
             .resizable(false)
             .build()
@@ -120,7 +110,7 @@ impl<'a> App<'a> {
                 let game_state_complete = self.game.is_state_complete();
                 let shown_player = match game_state_placement {
                     true => current_player,
-                    false => self.game.inactive_player()
+                    false => self.game.inactive_player(),
                 };
 
                 let space_size_u32 = self.game.settings.space_size as u32;
@@ -155,7 +145,10 @@ impl<'a> App<'a> {
 
                         // Only show ship locations during ship placement or if the
                         // current player is computer-controlled.
-                        if shown_player.ship_is_in_space(space_pos) && (game_state_placement || (space.is_unchecked() && current_player.is_cpu())) {
+                        if shown_player.ship_is_in_space(space_pos)
+                            && (game_state_placement
+                                || (space.is_unchecked() && current_player.is_cpu()))
+                        {
                             image(&space_textures[3], transform, g);
                         } else {
                             let space_state = if space.is_unchecked() {
@@ -195,10 +188,9 @@ impl<'a> App<'a> {
                     if game_winner.is_none() {
                         let turn = game_turn;
                         let player_text_size = player_text[turn].get_size();
-                        let transform = c.transform.trans(
-                            ((window_size[0] - player_text_size.0) / 2) as f64,
-                            2.0
-                        );
+                        let transform = c
+                            .transform
+                            .trans(((window_size[0] - player_text_size.0) / 2) as f64, 2.0);
                         image(&player_text[turn], transform, g);
                     }
 
@@ -213,7 +205,7 @@ impl<'a> App<'a> {
                             [0.0, 0.0, 0.0, alpha],
                             [0.0, 0.0, window_size[0] as f64, window_size[1] as f64],
                             c.transform,
-                            g
+                            g,
                         );
                     }
 
@@ -223,18 +215,30 @@ impl<'a> App<'a> {
                         let game_over_text_size = game_over_text[0].get_size();
                         let wins_text_size = game_over_text[1].get_size();
                         let player_text_size = player_text[winner].get_size();
-                        image(&game_over_text[0], c.transform.trans(
-                            ((window_size[0] - game_over_text_size.0) / 2) as f64,
-                            2.0
-                        ), g);
-                        image(&player_text[winner], c.transform.trans(
-                            ((window_size[0] - player_text_size.0 - wins_text_size.0 - 2) / 2) as f64,
-                            22.0
-                        ), g);
-                        image(&game_over_text[1], c.transform.trans(
-                            ((window_size[0] + player_text_size.0 - wins_text_size.0 + 2) / 2) as f64,
-                            22.0
-                        ), g);
+                        image(
+                            &game_over_text[0],
+                            c.transform
+                                .trans(((window_size[0] - game_over_text_size.0) / 2) as f64, 2.0),
+                            g,
+                        );
+                        image(
+                            &player_text[winner],
+                            c.transform.trans(
+                                ((window_size[0] - player_text_size.0 - wins_text_size.0 - 2) / 2)
+                                    as f64,
+                                22.0,
+                            ),
+                            g,
+                        );
+                        image(
+                            &game_over_text[1],
+                            c.transform.trans(
+                                ((window_size[0] + player_text_size.0 - wins_text_size.0 + 2) / 2)
+                                    as f64,
+                                22.0,
+                            ),
+                            g,
+                        );
                     }
                 });
             }
@@ -254,7 +258,9 @@ impl<'a> App<'a> {
             }
 
             // All ships have been placed; start the game.
-            if self.game.active_player().ships().len() == 4 && self.game.inactive_player().ships().len() == 4 {
+            if self.game.active_player().ships().len() == 4
+                && self.game.inactive_player().ships().len() == 4
+            {
                 self.game.start();
             }
         } else {
@@ -275,7 +281,8 @@ impl<'a> App<'a> {
 
                 if self.cpu_turn_timer >= 1.0 {
                     let cpu_space = self.game.inactive_player().cpu_select_space();
-                    self.game.select_space(&cpu_space)
+                    self.game
+                        .select_space(&cpu_space)
                         .expect("CPU player tried to select a checked space");
                     self.cpu_turn_timer = 0.0;
                     self.turn_active = false;
@@ -286,7 +293,8 @@ impl<'a> App<'a> {
 
     fn primary_action(&mut self, grid_pos: &[u8; 2]) {
         if self.game.is_player_placing_ship() {
-            self.game.active_player_mut()
+            self.game
+                .active_player_mut()
                 .place_temp_ship()
                 .expect("failed to place ship");
         }
@@ -361,10 +369,11 @@ impl<'a> App<'a> {
                 if let Some(ship) = player.get_ship_position(
                     grid_pos,
                     player.placement_ship().dir(),
-                    player.ships().len() as u8 + 2
+                    player.ships().len() as u8 + 2,
                 ) {
                     // `set_pos()` will return an error if the position was invalid
-                    player.placement_ship_mut()
+                    player
+                        .placement_ship_mut()
                         .set_pos(ship)
                         .expect("tried to set placement ship to invalid position");
                 }
@@ -378,8 +387,10 @@ impl<'a> App<'a> {
     fn mouse_cursor_grid_position(&self) -> Option<[u8; 2]> {
         match self.mouse_over_grid() {
             true => Some([
-                ((self.mouse_cursor[0] - self.grid_area[0] as f64) / self.grid_area[0] as f64) as u8,
-                ((self.mouse_cursor[1] - self.grid_area[1] as f64) / self.grid_area[0] as f64) as u8,
+                ((self.mouse_cursor[0] - self.grid_area[0] as f64) / self.grid_area[0] as f64)
+                    as u8,
+                ((self.mouse_cursor[1] - self.grid_area[1] as f64) / self.grid_area[0] as f64)
+                    as u8,
             ]),
             false => None,
         }
@@ -387,9 +398,9 @@ impl<'a> App<'a> {
 
     fn mouse_over_grid(&self) -> bool {
         self.mouse_cursor[0] >= self.grid_area[0] as f64
-        && self.mouse_cursor[1] >= self.grid_area[1] as f64
-        && self.mouse_cursor[0] < (self.grid_area[0] + self.grid_area[2]) as f64
-        && self.mouse_cursor[1] < (self.grid_area[1] + self.grid_area[3]) as f64
+            && self.mouse_cursor[1] >= self.grid_area[1] as f64
+            && self.mouse_cursor[0] < (self.grid_area[0] + self.grid_area[2]) as f64
+            && self.mouse_cursor[1] < (self.grid_area[1] + self.grid_area[3]) as f64
     }
 
     /// Returns the texture from the file at the given path.
@@ -399,7 +410,8 @@ impl<'a> App<'a> {
             path,
             Flip::None,
             &TextureSettings::new(),
-        ).unwrap()
+        )
+        .unwrap()
     }
 
     /// Returns the assets directory, if it could be found.
@@ -416,4 +428,3 @@ impl<'a> App<'a> {
         result.ok_or("could not find assets directory")
     }
 }
-

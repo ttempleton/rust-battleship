@@ -1,14 +1,6 @@
+use crate::{direction::Direction, ship::Ship, space::Space};
+use rand::{seq::SliceRandom, thread_rng, Rng};
 use std::cmp;
-use rand::{
-    Rng,
-    seq::SliceRandom,
-    thread_rng,
-};
-use crate::{
-    direction::Direction,
-    ship::Ship,
-    space::Space,
-};
 
 pub struct Player {
     is_cpu: bool,
@@ -63,7 +55,8 @@ impl Player {
     /// state is not active.
     pub fn sink_ship_if_all_hit(&mut self, pos: &[u8; 2]) -> Result<bool, &'static str> {
         if let Some(index) = self.ships.iter().position(|s| s.pos().contains(pos)) {
-            let sunk = self.ships[index].pos()
+            let sunk = self.ships[index]
+                .pos()
                 .iter()
                 .all(|p| self.space(p).is_hit());
 
@@ -90,7 +83,9 @@ impl Player {
 
         directions.shuffle(&mut rng);
 
-        let mut hit_spaces = self.spaces.iter()
+        let mut hit_spaces = self
+            .spaces
+            .iter()
             .filter(|s| s.is_hit() && self.ship(s.pos()).unwrap().is_active())
             .collect::<Vec<&Space>>();
 
@@ -99,11 +94,7 @@ impl Player {
         // Check for a line of hit spaces.
         for space in &hit_spaces {
             for direction in &directions {
-                let unchecked = self.find_unchecked_space(
-                    space.pos(),
-                    *direction,
-                    true
-                );
+                let unchecked = self.find_unchecked_space(space.pos(), *direction, true);
 
                 if let Some(pos) = unchecked {
                     if !select.contains(&pos) {
@@ -117,11 +108,7 @@ impl Player {
         // unchecked spaces next to it.
         if hit_spaces.len() > 0 && select.is_empty() {
             for direction in &directions {
-                let unchecked = self.find_unchecked_space(
-                    hit_spaces[0].pos(),
-                    *direction,
-                    false
-                );
+                let unchecked = self.find_unchecked_space(hit_spaces[0].pos(), *direction, false);
 
                 if let Some(pos) = unchecked {
                     select.push(pos);
@@ -162,11 +149,9 @@ impl Player {
         let old_head = self.temp_ship.pos()[0];
 
         if let Some(new_head) = self.movement(&old_head, direction) {
-            if let Some(ship) = self.get_ship_position(
-                new_head,
-                self.temp_ship.dir(),
-                self.temp_ship.len() as u8
-            ) {
+            if let Some(ship) =
+                self.get_ship_position(new_head, self.temp_ship.dir(), self.temp_ship.len() as u8)
+            {
                 self.temp_ship = Ship::new(ship);
             }
         }
@@ -180,11 +165,14 @@ impl Player {
             self.ships.push(Ship::new(ship.to_vec()));
             self.ships[ship_index].set_active()?;
 
-            self.temp_ship = Ship::new(self.get_ship_position(
-                [0, 0],
-                Direction::West,
-                self.ships[ship_index].len() as u8 + 1
-            ).unwrap());
+            self.temp_ship = Ship::new(
+                self.get_ship_position(
+                    [0, 0],
+                    Direction::West,
+                    self.ships[ship_index].len() as u8 + 1,
+                )
+                .unwrap(),
+            );
         }
 
         Ok(())
@@ -209,14 +197,8 @@ impl Player {
                 old_start_pos[0],
                 cmp::min(old_start_pos[1], self.grid_size[1] - ship_len),
             ],
-            Direction::East => [
-                cmp::max(old_start_pos[0], ship_len - 1),
-                old_start_pos[1],
-            ],
-            Direction::South => [
-                old_start_pos[0],
-                cmp::max(old_start_pos[1], ship_len - 1),
-            ],
+            Direction::East => [cmp::max(old_start_pos[0], ship_len - 1), old_start_pos[1]],
+            Direction::South => [old_start_pos[0], cmp::max(old_start_pos[1], ship_len - 1)],
             Direction::West => [
                 cmp::min(old_start_pos[0], self.grid_size[0] - ship_len),
                 old_start_pos[1],
@@ -260,7 +242,7 @@ impl Player {
         &self,
         head: [u8; 2],
         direction: Direction,
-        length: u8
+        length: u8,
     ) -> Option<Vec<[u8; 2]>> {
         let valid = match direction {
             Direction::North => head[1] + length <= self.grid_size[1],
@@ -295,9 +277,11 @@ impl Player {
     /// If the player is CPU-controlled, a ship in a space next to another ship
     /// will be considered invalid.
     pub fn valid_ship_position(&self, new_ship: &[[u8; 2]]) -> bool {
-        new_ship.iter()
-            .all(|s| self.valid_space(s) && !self.ship_is_in_space(s)
-                 && !(self.ship_is_next_to(s) && self.is_cpu))
+        new_ship.iter().all(|s| {
+            self.valid_space(s)
+                && !self.ship_is_in_space(s)
+                && !(self.ship_is_next_to(s) && self.is_cpu)
+        })
     }
 
     /// Gets a reference to the ships.
@@ -398,7 +382,7 @@ impl Player {
         &self,
         pos: &[u8; 2],
         direction: Direction,
-        check_for_line: bool
+        check_for_line: bool,
     ) -> Option<[u8; 2]> {
         let mut check_pos = self.movement(pos, direction);
 
@@ -453,4 +437,3 @@ impl Player {
         &mut self.temp_ship
     }
 }
-

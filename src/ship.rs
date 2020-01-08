@@ -92,6 +92,5 @@ impl Ship {
 enum ShipState {
     Placement,
     Active,
-    Sunk
+    Sunk,
 }
-

@@ -1,4 +1,4 @@
-use rand::{Rng, thread_rng};
+use rand::{thread_rng, Rng};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Direction {
@@ -33,7 +33,7 @@ impl Direction {
             1 => Direction::East,
             2 => Direction::South,
             3 => Direction::West,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -57,4 +57,3 @@ impl Direction {
         }
     }
 }
-

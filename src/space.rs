@@ -7,7 +7,7 @@ impl Space {
     pub fn new(pos: [u8; 2]) -> Space {
         Space {
             state: SpaceState::Unchecked,
-            position: pos
+            position: pos,
         }
     }
 
@@ -45,6 +45,5 @@ impl Space {
 #[derive(Clone, Copy, PartialEq)]
 pub enum SpaceState {
     Unchecked,
-    Checked(bool)
+    Checked(bool),
 }
-

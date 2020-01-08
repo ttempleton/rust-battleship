@@ -1,7 +1,4 @@
-use crate::{
-    player::Player,
-    settings::Settings,
-};
+use crate::{player::Player, settings::Settings};
 
 pub struct Game<'a> {
     pub settings: &'a Settings,
@@ -12,17 +9,11 @@ pub struct Game<'a> {
 
 impl<'a> Game<'a> {
     pub fn new(settings: &Settings) -> Game {
-        let grid_size = [
-            settings.spaces[0],
-            settings.spaces[1],
-        ];
+        let grid_size = [settings.spaces[0], settings.spaces[1]];
 
         Game {
             settings: &settings,
-            players: [
-                Player::new(grid_size, false),
-                Player::new(grid_size, true),
-            ],
+            players: [Player::new(grid_size, false), Player::new(grid_size, true)],
             state: GameState::Placement,
             turn: 0,
         }
@@ -92,7 +83,7 @@ impl<'a> Game<'a> {
     pub fn get_winner(&self) -> Option<usize> {
         match self.state {
             GameState::Complete => Some(self.turn as usize),
-            _ => None
+            _ => None,
         }
     }
 
@@ -126,4 +117,3 @@ pub enum GameState {
     Active,
     Complete,
 }
-

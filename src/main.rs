@@ -15,4 +15,3 @@ fn main() {
 
     app.init();
 }
-
