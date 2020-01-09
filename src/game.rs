@@ -2,6 +2,7 @@ use crate::player::Player;
 use crate::settings::GameSettings;
 
 pub struct Game {
+    settings: GameSettings,
     players: [Player; 2],
     state: GameState,
     turn: u8,
@@ -12,6 +13,7 @@ impl Game {
         let grid_size = [settings.spaces[0], settings.spaces[1]];
 
         Game {
+            settings: settings,
             players: [Player::new(grid_size, false), Player::new(grid_size, true)],
             state: GameState::Placement,
             turn: 0,
