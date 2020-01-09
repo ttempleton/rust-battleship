@@ -66,7 +66,7 @@ impl Game {
     }
 
     /// Sets the inactive player as active.
-    pub fn switch_turn(&mut self) {
+    pub fn switch_active_player(&mut self) {
         self.turn = self.not_turn() as u8;
     }
 

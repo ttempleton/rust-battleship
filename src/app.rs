@@ -267,7 +267,7 @@ impl<'a> App<'a> {
                     self.game.start();
                 }
 
-                self.game.switch_turn();
+                self.game.switch_active_player();
             }
         } else {
             if !self.turn_active {
@@ -275,7 +275,7 @@ impl<'a> App<'a> {
                 if self.turn_end_timer < 1.5 {
                     self.turn_end_timer += u.dt;
                 } else if self.game.is_state_active() {
-                    self.game.switch_turn();
+                    self.game.switch_active_player();
                     self.turn_end_timer = 0.0;
                     self.turn_active = true;
                 }
