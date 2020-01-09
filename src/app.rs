@@ -261,15 +261,13 @@ impl<'a> App<'a> {
                 self.game.active_player_mut().cpu_place_ships();
             }
 
-            if self.game.active_player().ships().len() == 4 {
-                self.game.switch_turn();
-            }
+            if self.game.active_player_placed_all_ships() {
+                if self.game.inactive_player_placed_all_ships() {
+                    // All ships have been placed; start the game.
+                    self.game.start();
+                }
 
-            // All ships have been placed; start the game.
-            if self.game.active_player().ships().len() == 4
-                && self.game.inactive_player().ships().len() == 4
-            {
-                self.game.start();
+                self.game.switch_turn();
             }
         } else {
             if !self.turn_active {

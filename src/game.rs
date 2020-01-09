@@ -70,6 +70,16 @@ impl Game {
         self.turn = self.not_turn() as u8;
     }
 
+    /// Returns whether the active player has placed all their ships.
+    pub fn active_player_placed_all_ships(&self) -> bool {
+        self.active_player().ships().len() == self.settings.ships.len()
+    }
+
+    /// Returns whether the inactive player has placed all their ships.
+    pub fn inactive_player_placed_all_ships(&self) -> bool {
+        self.inactive_player().ships().len() == self.settings.ships.len()
+    }
+
     /// Returns whether a human player is currently placing ships.
     pub fn is_player_placing_ship(&self) -> bool {
         self.state == GameState::Placement && !self.active_player().is_cpu()
