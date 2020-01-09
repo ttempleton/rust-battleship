@@ -45,14 +45,24 @@ impl Game {
         self.state == GameState::Active
     }
 
+    /// Sets the game state as active.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the game state was not `GameState::Placement`.
+    pub fn set_state_active(&mut self) -> Result<(), &'static str> {
+        if self.state != GameState::Placement {
+            Err("tried to set game as active from a state other than placement")
+        } else {
+            self.state = GameState::Active;
+
+            Ok(())
+        }
+    }
+
     /// Returns whether the game's current state is complete.
     pub fn is_state_complete(&self) -> bool {
         self.state == GameState::Complete
-    }
-
-    /// Starts the game by setting the game state to active.
-    pub fn start(&mut self) {
-        self.state = GameState::Active;
     }
 
     /// Returns as `usize` the index of the currently active player.

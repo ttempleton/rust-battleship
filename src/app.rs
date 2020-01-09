@@ -264,7 +264,9 @@ impl<'a> App<'a> {
             if self.game.active_player_placed_all_ships() {
                 if self.game.inactive_player_placed_all_ships() {
                     // All ships have been placed; start the game.
-                    self.game.start();
+                    self.game
+                        .set_state_active()
+                        .expect("failed to start the game");
                 }
 
                 self.game.switch_active_player();
