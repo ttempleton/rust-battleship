@@ -4,4 +4,5 @@ pub struct AppSettings {
 
 pub struct GameSettings {
     pub spaces: [u8; 2],
+    pub ships: Vec<u8>,
 }
