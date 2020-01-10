@@ -301,10 +301,7 @@ impl<'a> App<'a> {
 
     fn primary_action(&mut self, grid_pos: &[u8; 2]) {
         if self.game.is_player_placing_ship() {
-            self.game
-                .active_player_mut()
-                .place_temp_ship()
-                .expect("failed to place ship");
+            self.game.place_ship().expect("failed to place ship");
         }
 
         if self.game.is_player_selecting_space() && self.game.select_space(grid_pos).is_ok() {
@@ -341,7 +338,7 @@ impl<'a> App<'a> {
     /// Processes secondary button presses according to the current program state.
     fn button_secondary(&mut self) {
         if self.game.is_player_placing_ship() {
-            self.game.active_player_mut().rotate_temp_ship();
+            self.game.rotate_ship().expect("failed to rotate ship");
         }
     }
 
@@ -355,7 +352,7 @@ impl<'a> App<'a> {
     /// Performs grid movement according to the current program state.
     fn movement(&mut self, direction: Direction) {
         if self.game.is_player_placing_ship() {
-            self.game.active_player_mut().move_temp_ship(direction);
+            self.game.move_ship(direction).expect("failed to move ship");
         }
 
         if self.game.is_player_selecting_space() && self.turn_active {

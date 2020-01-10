@@ -1,3 +1,4 @@
+use crate::direction::Direction;
 use crate::player::Player;
 use crate::settings::GameSettings;
 
@@ -105,6 +106,51 @@ impl Game {
         match self.state {
             GameState::Complete => Some(self.turn as usize),
             _ => None,
+        }
+    }
+
+    /// Places the active player's placement ship.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the game's state is not `GameState::Placement`.
+    pub fn place_ship(&mut self) -> Result<(), &'static str> {
+        if self.state != GameState::Placement {
+            Err("tried to place ship outside of placement game state")
+        } else {
+            self.players[self.turn as usize].place_temp_ship()?;
+
+            Ok(())
+        }
+    }
+
+    /// Moves the active player's placement ship in the given direction.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the game's state is not `GameState::Placement`.
+    pub fn move_ship(&mut self, direction: Direction) -> Result<(), &'static str> {
+        if self.state != GameState::Placement {
+            Err("tried to move ship outside of placement game state")
+        } else {
+            self.players[self.turn as usize].move_temp_ship(direction);
+
+            Ok(())
+        }
+    }
+
+    /// Rotates the active player's placement ship in the given direction.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the game's state is not `GameState::Placement`.
+    pub fn rotate_ship(&mut self) -> Result<(), &'static str> {
+        if self.state != GameState::Placement {
+            Err("tried to rotate ship outside of placement game state")
+        } else {
+            self.players[self.turn as usize].rotate_temp_ship();
+
+            Ok(())
         }
     }
 
