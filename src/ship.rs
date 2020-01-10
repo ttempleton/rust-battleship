@@ -47,6 +47,11 @@ impl Ship {
         self.position.len()
     }
 
+    /// Returns whether the ship is in the placement state.
+    pub fn is_placement(&self) -> bool {
+        self.state == ShipState::Placement
+    }
+
     /// Returns whether the ship is active.
     pub fn is_active(&self) -> bool {
         self.state == ShipState::Active
