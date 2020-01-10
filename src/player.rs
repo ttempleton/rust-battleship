@@ -8,7 +8,6 @@ pub struct Player {
     ships: Vec<Ship>,
     grid_size: [u8; 2],
     grid_cursor: [u8; 2],
-    temp_ship: Ship,
 }
 
 impl Player {
@@ -29,7 +28,6 @@ impl Player {
             ships: vec![],
             grid_size: grid_size,
             grid_cursor: [0, 0],
-            temp_ship: Ship::new(vec![[0, 0], [1, 0]]),
         }
     }
 
@@ -145,43 +143,48 @@ impl Player {
         ]
     }
 
-    pub fn move_temp_ship(&mut self, direction: Direction) {
-        let old_head = self.temp_ship.pos()[0];
+    pub fn add_placement_ship(&mut self, length: u8) {
+        if self.ships.len() < 4 {
+            self.ships.push(Ship::new(
+                self.get_ship_position([0, 0], Direction::West, length)
+                    .unwrap(),
+            ));
+        }
+    }
+
+    pub fn move_placement_ship(&mut self, direction: Direction) {
+        let index = self.ships.len() - 1;
+        let old_head = self.ships[index].pos()[0];
 
         if let Some(new_head) = self.movement(&old_head, direction) {
-            if let Some(ship) =
-                self.get_ship_position(new_head, self.temp_ship.dir(), self.temp_ship.len() as u8)
-            {
-                self.temp_ship = Ship::new(ship);
+            if let Some(ship_pos) = self.get_ship_position(
+                new_head,
+                self.ships[index].dir(),
+                self.ships[index].len() as u8,
+            ) {
+                self.ships[index].set_pos(ship_pos);
             }
         }
     }
 
-    pub fn place_temp_ship(&mut self) -> Result<(), &'static str> {
-        let ship = self.temp_ship.pos().clone();
+    pub fn place_placement_ship(&mut self) -> Result<(), &'static str> {
+        let index = self.ships.len() - 1;
+        let ship = self.ships[index].pos().clone();
 
+        // Ensure the ship doesn't overlap with another ship.
         if self.valid_ship_position(&ship) {
-            let ship_index = self.ships.len();
-            self.ships.push(Ship::new(ship.to_vec()));
-            self.ships[ship_index].set_active()?;
-
-            self.temp_ship = Ship::new(
-                self.get_ship_position(
-                    [0, 0],
-                    Direction::West,
-                    self.ships[ship_index].len() as u8 + 1,
-                )
-                .unwrap(),
-            );
+            self.ships[index].set_active()?;
+            self.add_placement_ship(self.ships[index].len() as u8 + 1);
         }
 
         Ok(())
     }
 
     /// Rotates a ship during the ship placement game state.
-    pub fn rotate_temp_ship(&mut self) {
-        let ship_len = self.temp_ship.len() as u8;
-        let dir = match self.temp_ship.dir() {
+    pub fn rotate_placement_ship(&mut self) {
+        let index = self.ships.len() - 1;
+        let ship_len = self.ships[index].len() as u8;
+        let dir = match self.ships[index].dir() {
             Direction::North => Direction::East,
             Direction::East => Direction::South,
             Direction::South => Direction::West,
@@ -191,7 +194,7 @@ impl Player {
         // If the current starting position would cause the rotation to position
         // the ship partially out of bounds, adjust the starting position such
         // that the ship will be entirely within bounds.
-        let old_start_pos = self.temp_ship.pos()[0];
+        let old_start_pos = self.ships[index].pos()[0];
         let start_pos = match dir {
             Direction::North => [
                 old_start_pos[0],
@@ -205,8 +208,8 @@ impl Player {
             ],
         };
 
-        if let Some(ship) = self.get_ship_position(start_pos, dir, ship_len) {
-            self.temp_ship = Ship::new(ship);
+        if let Some(ship_pos) = self.get_ship_position(start_pos, dir, ship_len) {
+            self.ships[index].set_pos(ship_pos);
         }
     }
 
@@ -214,6 +217,7 @@ impl Player {
         for length in 2..6 {
             let pos = self.cpu_place_ship(length);
             self.ships.push(Ship::new(pos));
+            self.ships[(length - 2) as usize].set_active();
         }
     }
 
@@ -276,7 +280,7 @@ impl Player {
     ///
     /// If the player is CPU-controlled, a ship in a space next to another ship
     /// will be considered invalid.
-    pub fn valid_ship_position(&self, new_ship: &[[u8; 2]]) -> bool {
+    fn valid_ship_position(&self, new_ship: &[[u8; 2]]) -> bool {
         new_ship.iter().all(|s| {
             self.valid_space(s)
                 && !self.ship_is_in_space(s)
@@ -296,7 +300,9 @@ impl Player {
 
     /// Returns whether a ship occupies the specified grid coordinates.
     pub fn ship_is_in_space(&self, pos: &[u8; 2]) -> bool {
-        self.ships.iter().any(|s| s.pos().contains(pos))
+        self.ships
+            .iter()
+            .any(|s| s.pos().contains(pos) && !s.is_placement())
     }
 
     /// Returns whether there is a ship next to the specified grid coordinates.
@@ -429,11 +435,27 @@ impl Player {
         self.is_cpu
     }
 
-    pub fn placement_ship(&self) -> &Ship {
-        &self.temp_ship
+    pub fn placement_ship(&self) -> Result<&Ship, &'static str> {
+        let ships_len = self.ships.len();
+
+        if ships_len == 0 {
+            Err("player has no ships")
+        } else if !self.ships[ships_len - 1].is_placement() {
+            Err("player has no placement ship")
+        } else {
+            Ok(&self.ships[self.ships.len() - 1])
+        }
     }
 
-    pub fn placement_ship_mut(&mut self) -> &mut Ship {
-        &mut self.temp_ship
+    pub fn placement_ship_mut(&mut self) -> Result<&mut Ship, &'static str> {
+        let ships_len = self.ships.len();
+
+        if ships_len == 0 {
+            Err("player has no ships")
+        } else if !self.ships[ships_len - 1].is_placement() {
+            Err("player has no placement ship")
+        } else {
+            Ok(&mut self.ships[ships_len - 1])
+        }
     }
 }

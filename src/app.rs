@@ -173,12 +173,14 @@ impl<'a> App<'a> {
                     // During ship placement, show the temporary position of the
                     // next ship to be placed.
                     if game_state_placement {
-                        for pos in shown_player.placement_ship().pos() {
-                            let transform = c.transform.trans(
-                                (space_size_u32 * pos[0] as u32 + grid_area[0]) as f64,
-                                (space_size_u32 * pos[1] as u32 + grid_area[1]) as f64,
-                            );
-                            image(&space_textures[3], transform, g);
+                        if let Ok(ship) = shown_player.placement_ship() {
+                            for pos in ship.pos() {
+                                let transform = c.transform.trans(
+                                    (space_size_u32 * pos[0] as u32 + grid_area[0]) as f64,
+                                    (space_size_u32 * pos[1] as u32 + grid_area[1]) as f64,
+                                );
+                                image(&space_textures[3], transform, g);
+                            }
                         }
                     }
 
@@ -371,15 +373,18 @@ impl<'a> App<'a> {
             let is_human_turn = !player.is_cpu();
 
             if game_state_placement {
+                let placement_ship = player
+                    .placement_ship()
+                    .expect("failed to get player's placement ship");
+
                 if let Some(ship) = player.get_ship_position(
                     grid_pos,
-                    player.placement_ship().dir(),
+                    placement_ship.dir(),
                     player.ships().len() as u8 + 2,
                 ) {
                     // `set_pos()` will return an error if the position was invalid
-                    player
-                        .placement_ship_mut()
-                        .set_pos(ship)
+                    self.game
+                        .set_placement_ship(ship)
                         .expect("tried to set placement ship to invalid position");
                 }
             } else if game_state_active && is_human_turn {

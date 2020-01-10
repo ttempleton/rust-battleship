@@ -12,10 +12,15 @@ pub struct Game {
 impl Game {
     pub fn new(settings: GameSettings) -> Game {
         let grid_size = [settings.spaces[0], settings.spaces[1]];
+        let mut players = [Player::new(grid_size, false), Player::new(grid_size, true)];
+
+        for player in players.iter_mut().find(|p| !p.is_cpu()) {
+            player.add_placement_ship(settings.ships[0]);
+        }
 
         Game {
             settings: settings,
-            players: [Player::new(grid_size, false), Player::new(grid_size, true)],
+            players: players,
             state: GameState::Placement,
             turn: 0,
         }
@@ -83,12 +88,16 @@ impl Game {
 
     /// Returns whether the active player has placed all their ships.
     pub fn active_player_placed_all_ships(&self) -> bool {
-        self.active_player().ships().len() == self.settings.ships.len()
+        let ships = self.active_player().ships();
+
+        ships.len() == self.settings.ships.len() && !ships[ships.len() - 1].is_placement()
     }
 
     /// Returns whether the inactive player has placed all their ships.
     pub fn inactive_player_placed_all_ships(&self) -> bool {
-        self.inactive_player().ships().len() == self.settings.ships.len()
+        let ships = self.inactive_player().ships();
+
+        ships.len() == self.settings.ships.len() && !ships[ships.len() - 1].is_placement()
     }
 
     /// Returns whether a human player is currently placing ships.
@@ -118,7 +127,7 @@ impl Game {
         if self.state != GameState::Placement {
             Err("tried to place ship outside of placement game state")
         } else {
-            self.players[self.turn as usize].place_temp_ship()?;
+            self.players[self.turn as usize].place_placement_ship()?;
 
             Ok(())
         }
@@ -133,7 +142,7 @@ impl Game {
         if self.state != GameState::Placement {
             Err("tried to move ship outside of placement game state")
         } else {
-            self.players[self.turn as usize].move_temp_ship(direction);
+            self.players[self.turn as usize].move_placement_ship(direction);
 
             Ok(())
         }
@@ -148,7 +157,24 @@ impl Game {
         if self.state != GameState::Placement {
             Err("tried to rotate ship outside of placement game state")
         } else {
-            self.players[self.turn as usize].rotate_temp_ship();
+            self.players[self.turn as usize].rotate_placement_ship();
+
+            Ok(())
+        }
+    }
+
+    /// Sets the active player's placement ship to the given position.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the game's state is not `GameState::Placement`, if the active player
+    /// has no ships, or if the active player has no placement ship.
+    pub fn set_placement_ship(&mut self, pos: Vec<[u8; 2]>) -> Result<(), &'static str> {
+        if self.state != GameState::Placement {
+            Err("tried to set position of ship outside of placement game state")
+        } else {
+            let ship = self.players[self.turn as usize].placement_ship_mut()?;
+            ship.set_pos(pos)?;
 
             Ok(())
         }
