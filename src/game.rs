@@ -122,12 +122,21 @@ impl Game {
     ///
     /// # Errors
     ///
-    /// Returns an error if the game's state is not `GameState::Placement`.
+    /// Returns an error if the game's state is not `GameState::Placement` or if the active
+    /// player's placement ship overlaps with another ship.
     pub fn place_ship(&mut self) -> Result<(), &'static str> {
         if self.state != GameState::Placement {
             Err("tried to place ship outside of placement game state")
         } else {
-            self.players[self.turn as usize].place_placement_ship()?;
+            let ref mut player = self.players[self.turn as usize];
+            let ship_count = player.ships().len();
+
+            player.place_placement_ship()?;
+
+            // If the player hasn't placed all their ships, add a new one.
+            if ship_count < self.settings.ships.len() {
+                player.add_placement_ship(self.settings.ships[ship_count]);
+            }
 
             Ok(())
         }

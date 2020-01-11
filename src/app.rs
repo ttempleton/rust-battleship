@@ -302,8 +302,9 @@ impl<'a> App<'a> {
     }
 
     fn primary_action(&mut self, grid_pos: &[u8; 2]) {
-        if self.game.is_player_placing_ship() {
-            self.game.place_ship().expect("failed to place ship");
+        if self.game.is_player_placing_ship() && self.game.place_ship().is_err() {
+            // TODO: more specific error checking.
+            // For now, just assume it's the overlap error and ignore it.
         }
 
         if self.game.is_player_selecting_space() && self.game.select_space(grid_pos).is_ok() {

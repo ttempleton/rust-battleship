@@ -169,15 +169,15 @@ impl Player {
 
     pub fn place_placement_ship(&mut self) -> Result<(), &'static str> {
         let index = self.ships.len() - 1;
-        let ship = self.ships[index].pos().clone();
 
         // Ensure the ship doesn't overlap with another ship.
-        if self.valid_ship_position(&ship) {
+        if !self.valid_ship_position(&self.ships[index].pos()) {
+            Err("placement ship overlaps with another ship")
+        } else {
             self.ships[index].set_active()?;
-            self.add_placement_ship(self.ships[index].len() as u8 + 1);
-        }
 
-        Ok(())
+            Ok(())
+        }
     }
 
     /// Rotates a ship during the ship placement game state.
