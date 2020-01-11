@@ -255,25 +255,24 @@ impl Player {
             Direction::West => head[0] + length <= self.grid_size[0],
         };
 
-        let ship_opt = if valid {
-            let mut ship = vec![head];
+        if valid {
+            let mut ship = Vec::with_capacity(length as usize);
 
-            for pos in 1..length {
+            for pos in 0..length {
                 let pos_u8 = pos as u8;
-                let space = match direction {
+
+                ship.push(match direction {
                     Direction::North => [head[0], head[1] + pos_u8],
                     Direction::East => [head[0] - pos_u8, head[1]],
                     Direction::South => [head[0], head[1] - pos_u8],
                     Direction::West => [head[0] + pos_u8, head[1]],
-                };
-                ship.push(space);
+                });
             }
+
             Some(ship)
         } else {
             None
-        };
-
-        ship_opt
+        }
     }
 
     /// Checks that the given ship position is valid.
