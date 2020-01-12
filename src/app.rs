@@ -364,32 +364,32 @@ impl<'a> App<'a> {
     }
 
     /// Records the last known mouse cursor position.
-    pub fn mouse_cursor_movement(&mut self, c: &[f64; 2]) {
+    fn mouse_cursor_movement(&mut self, c: &[f64; 2]) {
         self.mouse_cursor = *c;
 
         if let Some(grid_pos) = self.mouse_cursor_grid_position() {
-            let game_state_placement = self.game.is_state_placement();
-            let game_state_active = self.game.is_state_active();
-            let ref mut player = self.game.active_player_mut();
-            let is_human_turn = !player.is_cpu();
-
-            if game_state_placement {
-                let placement_ship = player
+            if self.game.is_state_placement() {
+                let player = self.game.active_player();
+                let ship_dir = player
                     .placement_ship()
-                    .expect("failed to get player's placement ship");
+                    .expect("failed to get player's placement ship")
+                    .dir();
+                // Subtract 1 from the ship count to not consider the placement ship itself.
+                let ship_count = player.ships().len() - 1;
+                let ship_len = self.game.settings().ships[ship_count];
 
-                if let Some(ship) = player.get_ship_position(
-                    grid_pos,
-                    placement_ship.dir(),
-                    player.ships().len() as u8 + 2,
-                ) {
-                    // `set_pos()` will return an error if the position was invalid
+                if let Some(ship) = player.get_ship_position(grid_pos, ship_dir, ship_len) {
+                    // `set_pos()` will return an error if the position was invalid.
                     self.game
                         .set_placement_ship(ship)
                         .expect("tried to set placement ship to invalid position");
                 }
-            } else if game_state_active && is_human_turn {
-                player.set_grid_cursor(&grid_pos);
+            } else if self.game.is_state_active() {
+                let ref mut player = self.game.active_player_mut();
+
+                if !player.is_cpu() {
+                    player.set_grid_cursor(&grid_pos);
+                }
             }
         }
     }

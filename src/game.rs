@@ -26,6 +26,10 @@ impl Game {
         }
     }
 
+    pub fn settings(&self) -> &GameSettings {
+        &self.settings
+    }
+
     /// Returns a reference to the currently active player.
     pub fn active_player(&self) -> &Player {
         &self.players[self.turn as usize]
