@@ -14,8 +14,12 @@ impl Game {
         let grid_size = [settings.spaces[0], settings.spaces[1]];
         let mut players = [Player::new(grid_size, false), Player::new(grid_size, true)];
 
-        for player in players.iter_mut().find(|p| !p.is_cpu()) {
-            player.add_placement_ship(settings.ships[0]);
+        for player in &mut players {
+            if !player.is_cpu() {
+                player.add_placement_ship(settings.ships[0]);
+            } else {
+                player.cpu_place_ships();
+            }
         }
 
         Game {
@@ -55,7 +59,7 @@ impl Game {
         self.state == GameState::Active
     }
 
-    /// Sets the game state as active.
+    /// Sets the game state as active. starting the game and setting player 1 as the active player.
     ///
     /// # Errors
     ///
@@ -65,6 +69,7 @@ impl Game {
             Err("tried to set game as active from a state other than placement")
         } else {
             self.state = GameState::Active;
+            self.turn = 0;
 
             Ok(())
         }
@@ -93,13 +98,6 @@ impl Game {
     /// Returns whether the active player has placed all their ships.
     pub fn active_player_placed_all_ships(&self) -> bool {
         let ships = self.active_player().ships();
-
-        ships.len() == self.settings.ships.len() && !ships[ships.len() - 1].is_placement()
-    }
-
-    /// Returns whether the inactive player has placed all their ships.
-    pub fn inactive_player_placed_all_ships(&self) -> bool {
-        let ships = self.inactive_player().ships();
 
         ships.len() == self.settings.ships.len() && !ships[ships.len() - 1].is_placement()
     }

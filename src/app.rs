@@ -256,22 +256,15 @@ impl<'a> App<'a> {
     }
 
     fn update(&mut self, u: &UpdateArgs) {
-        let active_player_is_cpu = self.game.active_player().is_cpu();
-
-        if self.game.is_state_placement() {
-            if active_player_is_cpu {
-                self.game.active_player_mut().cpu_place_ships();
-            }
+        if self.game.is_state_placement() && self.game.active_player_placed_all_ships() {
+            self.game.switch_active_player();
 
             if self.game.active_player_placed_all_ships() {
-                if self.game.inactive_player_placed_all_ships() {
-                    // All ships have been placed; start the game.
-                    self.game
-                        .set_state_active()
-                        .expect("failed to start the game");
-                }
-
-                self.game.switch_active_player();
+                // All ships have been placed; start the game.
+                // This will also set player 1 as active so no need to switch active player.
+                self.game
+                    .set_state_active()
+                    .expect("failed to start the game");
             }
         } else {
             if !self.turn_active {
@@ -286,7 +279,7 @@ impl<'a> App<'a> {
             }
 
             // Continue/end the delay when CPU players take their turn.
-            if self.turn_active && active_player_is_cpu {
+            if self.turn_active && self.game.active_player().is_cpu() {
                 self.cpu_turn_timer += u.dt;
 
                 if self.cpu_turn_timer >= 1.0 {
