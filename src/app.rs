@@ -396,14 +396,15 @@ impl<'a> App<'a> {
 
     /// Returns the grid coordinates of the mouse cursor position.
     fn mouse_cursor_grid_position(&self) -> Option<[u8; 2]> {
-        match self.mouse_over_grid() {
-            true => Some([
-                ((self.mouse_cursor[0] - self.grid_area[0] as f64) / self.grid_area[0] as f64)
-                    as u8,
-                ((self.mouse_cursor[1] - self.grid_area[1] as f64) / self.grid_area[0] as f64)
-                    as u8,
-            ]),
-            false => None,
+        if self.mouse_over_grid() {
+            let grid_area_f64 = [self.grid_area[0] as f64, self.grid_area[1] as f64];
+
+            Some([
+                ((self.mouse_cursor[0] - grid_area_f64[0]) / grid_area_f64[0]) as u8,
+                ((self.mouse_cursor[1] - grid_area_f64[1]) / grid_area_f64[0]) as u8,
+            ])
+        } else {
+            None
         }
     }
 
