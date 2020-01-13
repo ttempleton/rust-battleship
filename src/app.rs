@@ -186,7 +186,7 @@ impl<'a> App<'a> {
 
                     // During the game, show the player's grid cursor.
                     if game_state_active && turn_end_timer == 0.0 && !current_player.is_cpu() {
-                        let grid_cursor = current_player.get_grid_cursor();
+                        let grid_cursor = current_player.grid_cursor();
                         let transform = c.transform.trans(
                             (space_size_u32 * grid_cursor[0] as u32 + grid_area[0]) as f64,
                             (space_size_u32 * grid_cursor[1] as u32 + grid_area[1]) as f64,
@@ -327,7 +327,7 @@ impl<'a> App<'a> {
 
     /// Processes primary button presses according to the current program state.
     fn button_primary(&mut self) {
-        let grid_pos = self.game.active_player().get_grid_cursor();
+        let grid_pos = self.game.active_player().grid_cursor().clone();
         self.primary_action(&grid_pos);
     }
 

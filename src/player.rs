@@ -353,11 +353,6 @@ impl Player {
         self.grid_size[0] as usize * pos[0] as usize + pos[1] as usize
     }
 
-    /// Returns the coordinates of the player's grid cursor.
-    pub fn get_grid_cursor(&self) -> [u8; 2] {
-        self.grid_cursor.clone()
-    }
-
     /// Returns the coordinates of a movement from `pos` in a `direction`.
     /// Returns `None` if the movement is not possible.
     fn movement(&self, pos: &[u8; 2], direction: Direction) -> Option<[u8; 2]> {
@@ -416,6 +411,11 @@ impl Player {
         }
 
         check_pos
+    }
+
+    /// Returns the coordinates of the player's grid cursor.
+    pub fn grid_cursor(&self) -> &[u8; 2] {
+        &self.grid_cursor
     }
 
     /// Moves the player's grid cursor in the given `direction` if possible.
