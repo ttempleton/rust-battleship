@@ -11,7 +11,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(grid_size: [u8; 2], is_cpu: bool) -> Player {
+    pub fn new(grid_size: [u8; 2], ship_count: usize, is_cpu: bool) -> Player {
         let spaces_x = grid_size[0] as usize;
         let spaces_y = grid_size[1] as usize;
         let mut spaces = Vec::with_capacity(spaces_x * spaces_y);
@@ -25,7 +25,7 @@ impl Player {
         Player {
             is_cpu: is_cpu,
             spaces: spaces,
-            ships: vec![],
+            ships: Vec::with_capacity(ship_count),
             grid_size: grid_size,
             grid_cursor: [0, 0],
         }
@@ -144,7 +144,7 @@ impl Player {
     }
 
     pub fn add_placement_ship(&mut self, length: u8) {
-        if self.ships.len() < 4 {
+        if self.ships.len() < self.ships.capacity() {
             self.ships.push(Ship::new(
                 self.get_ship_position([0, 0], Direction::West, length)
                     .unwrap(),

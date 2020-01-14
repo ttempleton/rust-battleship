@@ -12,7 +12,10 @@ pub struct Game {
 impl Game {
     pub fn new(settings: GameSettings) -> Game {
         let grid_size = [settings.spaces[0], settings.spaces[1]];
-        let mut players = [Player::new(grid_size, false), Player::new(grid_size, true)];
+        let mut players = [
+            Player::new(grid_size, settings.ships.len(), false),
+            Player::new(grid_size, settings.ships.len(), true),
+        ];
 
         for player in &mut players {
             if !player.is_cpu() {
