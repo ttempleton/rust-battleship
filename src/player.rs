@@ -176,12 +176,7 @@ impl Player {
     pub fn rotate_placement_ship(&mut self) {
         let index = self.ships.len() - 1;
         let ship_len = self.ships[index].len() as u8;
-        let dir = match self.ships[index].dir() {
-            Direction::North => Direction::East,
-            Direction::East => Direction::South,
-            Direction::South => Direction::West,
-            Direction::West => Direction::North,
-        };
+        let dir = self.ships[index].dir().rotated();
 
         // If the current starting position would cause the rotation to position
         // the ship partially out of bounds, adjust the starting position such

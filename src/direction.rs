@@ -18,6 +18,15 @@ impl Direction {
         }
     }
 
+    pub fn rotated(&self) -> Direction {
+        match *self {
+            Direction::North => Direction::East,
+            Direction::East => Direction::South,
+            Direction::South => Direction::West,
+            Direction::West => Direction::North,
+        }
+    }
+
     pub fn all() -> [Direction; 4] {
         [
             Direction::North,
