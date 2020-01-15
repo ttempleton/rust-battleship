@@ -1,5 +1,5 @@
 use crate::{direction::Direction, ship::Ship, space::Space};
-use rand::{seq::SliceRandom, thread_rng, Rng};
+use rand::{thread_rng, Rng};
 use std::cmp;
 
 pub struct Player {
@@ -73,21 +73,19 @@ impl Player {
         self.ships.iter().all(|ship| ship.is_sunk())
     }
 
-    /// Determines the next space a CPU player will select.
-    pub fn cpu_select_space(&self) -> [u8; 2] {
-        let mut rng = thread_rng();
-        let mut select = Vec::new();
-        let mut directions = Direction::all();
-
-        directions.shuffle(&mut rng);
-
-        let mut hit_spaces = self
+    /// Returns suggestions for the best spaces to check based on the player's hit spaces and ships.
+    ///
+    /// This is intended for use in cases where the active player is computer-controlled, to
+    /// determine the space they check.  However, it could also be used to suggest a space that a
+    /// human player could check.
+    pub fn suggested_checks(&self) -> Vec<[u8; 2]> {
+        let mut select = vec![];
+        let directions = Direction::all();
+        let hit_spaces = self
             .spaces
             .iter()
             .filter(|s| s.is_hit() && self.ship(s.pos()).unwrap().is_active())
             .collect::<Vec<&Space>>();
-
-        hit_spaces.shuffle(&mut rng);
 
         // Check for a line of hit spaces.
         for space in &hit_spaces {
@@ -102,8 +100,8 @@ impl Player {
             }
         }
 
-        // If a hit space was found, but no hit spaces next to it, find any
-        // unchecked spaces next to it.
+        // If a hit space was found, but no hit spaces next to it, look for unchecked spaces next
+        // to it.
         if hit_spaces.len() > 0 && select.is_empty() {
             for direction in &directions {
                 let unchecked = self.find_unchecked_space(hit_spaces[0].pos(), *direction, false);
@@ -114,24 +112,18 @@ impl Player {
             }
         }
 
-        // If no spaces have been selected, just select any available space.
+        // If no candidates have been found yet, just add any unchecked space.
+        // TODO: smarter checking for spaces that remaining ships could realistically occupy.
         if select.is_empty() {
-            let pos: [u8; 2] = loop {
-                let space = self.rng_pos();
-
-                if self.space(&space).is_unchecked() {
-                    break space;
-                }
-            };
-
-            select.push(pos);
+            select = self
+                .spaces
+                .iter()
+                .filter(|space| space.is_unchecked())
+                .map(|space| *space.pos())
+                .collect::<Vec<[u8; 2]>>();
         }
 
-        if select.len() > 1 {
-            select.shuffle(&mut rng);
-        }
-
-        select[0]
+        select
     }
 
     fn rng_pos(&self) -> [u8; 2] {

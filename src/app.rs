@@ -283,7 +283,7 @@ impl<'a> App<'a> {
                 self.cpu_turn_timer += u.dt;
 
                 if self.cpu_turn_timer >= 1.0 {
-                    let cpu_space = self.game.inactive_player().cpu_select_space();
+                    let cpu_space = self.game.suggested_check();
                     self.game
                         .select_space(&cpu_space)
                         .expect("CPU player tried to select a checked space");

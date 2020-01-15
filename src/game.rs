@@ -1,6 +1,7 @@
 use crate::direction::Direction;
 use crate::player::Player;
 use crate::settings::GameSettings;
+use rand::{seq::SliceRandom, thread_rng};
 
 pub struct Game {
     settings: GameSettings,
@@ -215,6 +216,19 @@ impl Game {
         }
 
         Ok(())
+    }
+
+    /// Returns an unchecked position on the inactive player's grid as a check suggestion.
+    ///
+    /// This is intended for use in cases where the active player is computer-controlled, to
+    /// determine the space they check.  However, it could also be used to suggest a space that a
+    /// human player could check.
+    pub fn suggested_check(&self) -> [u8; 2] {
+        let mut rng = thread_rng();
+        let mut positions = self.inactive_player().suggested_checks();
+        positions.shuffle(&mut rng);
+
+        positions[0]
     }
 }
 
