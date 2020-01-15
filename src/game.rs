@@ -172,7 +172,7 @@ impl Game {
         if self.state != GameState::Placement {
             Err("tried to rotate ship outside of placement game state")
         } else {
-            self.players[self.turn as usize].rotate_placement_ship();
+            self.players[self.turn as usize].rotate_placement_ship()?;
 
             Ok(())
         }

@@ -172,32 +172,37 @@ impl Player {
         }
     }
 
-    /// Rotates a ship during the ship placement game state.
-    pub fn rotate_placement_ship(&mut self) {
+    /// Rotates the player's placement ship during the ship placement game state.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the player does not have a placement ship.
+    pub fn rotate_placement_ship(&mut self) -> Result<(), &'static str> {
         let index = self.ships.len() - 1;
         let ship_len = self.ships[index].len() as u8;
         let dir = self.ships[index].dir().rotated();
 
-        // If the current starting position would cause the rotation to position
-        // the ship partially out of bounds, adjust the starting position such
-        // that the ship will be entirely within bounds.
-        let old_start_pos = self.ships[index].pos()[0];
-        let start_pos = match dir {
+        // If the current ship position would cause the rotation to position the ship partially out
+        // of bounds, adjust the position such that the ship will be entirely within bounds.
+        let old_head = self.ships[index].pos()[0];
+        let new_head = match dir {
             Direction::North => [
-                old_start_pos[0],
-                cmp::min(old_start_pos[1], self.grid_size[1] - ship_len),
+                old_head[0],
+                cmp::min(old_head[1], self.grid_size[1] - ship_len),
             ],
-            Direction::East => [cmp::max(old_start_pos[0], ship_len - 1), old_start_pos[1]],
-            Direction::South => [old_start_pos[0], cmp::max(old_start_pos[1], ship_len - 1)],
+            Direction::East => [cmp::max(old_head[0], ship_len - 1), old_head[1]],
+            Direction::South => [old_head[0], cmp::max(old_head[1], ship_len - 1)],
             Direction::West => [
-                cmp::min(old_start_pos[0], self.grid_size[0] - ship_len),
-                old_start_pos[1],
+                cmp::min(old_head[0], self.grid_size[0] - ship_len),
+                old_head[1],
             ],
         };
 
-        if let Some(ship_pos) = self.get_ship_position(start_pos, dir, ship_len) {
-            self.ships[index].set_pos(ship_pos);
-        }
+        // get_ship_position() should always return Some(ship_pos) in this situation.
+        let ship_pos = self.get_ship_position(new_head, dir, ship_len).unwrap();
+        self.ships[index].set_pos(ship_pos)?;
+
+        Ok(())
     }
 
     pub fn cpu_place_ships(&mut self) {
