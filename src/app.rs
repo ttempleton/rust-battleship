@@ -347,8 +347,8 @@ impl<'a> App<'a> {
 
     /// Performs grid movement according to the current program state.
     fn movement(&mut self, direction: Direction) {
-        if self.game.is_player_placing_ship() {
-            self.game.move_ship(direction).expect("failed to move ship");
+        if self.game.is_player_placing_ship() && self.game.move_ship(direction).is_err() {
+            // TODO: more specific error checking.
         }
 
         if self.game.is_player_selecting_space() && self.turn_active {

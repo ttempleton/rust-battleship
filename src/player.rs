@@ -144,19 +144,29 @@ impl Player {
         }
     }
 
-    pub fn move_placement_ship(&mut self, direction: Direction) {
+    /// Moves the player's placement ship in the given direction.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the player does not have a placement ship, or if the ship could not be
+    /// moved in `direction` without going out of bounds.
+    pub fn move_placement_ship(&mut self, direction: Direction) -> Result<(), &'static str> {
         let index = self.ships.len() - 1;
         let old_head = self.ships[index].pos()[0];
-
-        if let Some(new_head) = self.movement(&old_head, direction) {
-            if let Some(ship_pos) = self.get_ship_position(
+        let new_head = self
+            .movement(&old_head, direction)
+            .ok_or("movement not possible without going out of bounds")?;
+        let ship_pos = self
+            .get_ship_position(
                 new_head,
                 self.ships[index].dir(),
                 self.ships[index].len() as u8,
-            ) {
-                self.ships[index].set_pos(ship_pos);
-            }
-        }
+            )
+            .ok_or("movement not possible without going out of bounds")?;
+
+        self.ships[index].set_pos(ship_pos)?;
+
+        Ok(())
     }
 
     pub fn place_placement_ship(&mut self) -> Result<(), &'static str> {

@@ -157,7 +157,7 @@ impl Game {
         if self.state != GameState::Placement {
             Err("tried to move ship outside of placement game state")
         } else {
-            self.players[self.turn as usize].move_placement_ship(direction);
+            self.players[self.turn as usize].move_placement_ship(direction)?;
 
             Ok(())
         }
