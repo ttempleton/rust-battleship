@@ -135,11 +135,10 @@ impl Player {
         ]
     }
 
-    pub fn add_placement_ship(&mut self, length: u8) {
+    pub fn add_placement_ship(&mut self, head: [u8; 2], direction: Direction, length: u8) {
         if self.ships.len() < self.ships.capacity() {
             self.ships.push(Ship::new(
-                self.get_ship_position([0, 0], Direction::West, length)
-                    .unwrap(),
+                self.get_ship_position(head, direction, length).unwrap(),
             ));
         }
     }

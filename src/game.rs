@@ -20,7 +20,7 @@ impl Game {
 
         for player in &mut players {
             if !player.is_cpu() {
-                player.add_placement_ship(settings.ships[0]);
+                player.add_placement_ship([0, 0], Direction::West, settings.ships[0]);
             } else {
                 player.cpu_place_ships();
             }
@@ -141,7 +141,7 @@ impl Game {
 
             // If the player hasn't placed all their ships, add a new one.
             if ship_count < self.settings.ships.len() {
-                player.add_placement_ship(self.settings.ships[ship_count]);
+                player.add_placement_ship([0, 0], Direction::West, self.settings.ships[ship_count]);
             }
 
             Ok(())
