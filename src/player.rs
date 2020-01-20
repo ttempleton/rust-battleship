@@ -1,5 +1,4 @@
 use crate::{direction::Direction, ship::Ship, space::Space};
-use rand::{thread_rng, Rng};
 use std::cmp;
 
 pub struct Player {
@@ -126,20 +125,33 @@ impl Player {
         select
     }
 
-    fn rng_pos(&self) -> [u8; 2] {
-        let mut rng = thread_rng();
+    pub fn add_ship(
+        &mut self,
+        head: [u8; 2],
+        direction: Direction,
+        length: u8,
+        placement: bool,
+    ) -> Result<(), &'static str> {
+        if self.ships.len() == self.ships.capacity() {
+            Err("tried to add ship to a player with all ships already added")
+        } else {
+            let pos = self
+                .get_ship_position(head, direction, length)
+                .ok_or("tried to place a ship partially out of bounds")?;
 
-        [
-            rng.gen_range(0, self.grid_size[0]),
-            rng.gen_range(0, self.grid_size[1]),
-        ]
-    }
+            if !placement && !self.valid_ship_position(&pos) {
+                Err("tried to place a ship in an invalid position")
+            } else {
+                let mut ship = Ship::new(pos);
 
-    pub fn add_placement_ship(&mut self, head: [u8; 2], direction: Direction, length: u8) {
-        if self.ships.len() < self.ships.capacity() {
-            self.ships.push(Ship::new(
-                self.get_ship_position(head, direction, length).unwrap(),
-            ));
+                if !placement {
+                    ship.set_active()?;
+                }
+
+                self.ships.push(ship);
+
+                Ok(())
+            }
         }
     }
 
@@ -212,29 +224,6 @@ impl Player {
         self.ships[index].set_pos(ship_pos)?;
 
         Ok(())
-    }
-
-    pub fn cpu_place_ships(&mut self) {
-        for length in 2..6 {
-            let pos = self.cpu_place_ship(length);
-            self.ships.push(Ship::new(pos));
-            self.ships[(length - 2) as usize].set_active();
-        }
-    }
-
-    /// RNGs ship locations for CPU players.
-    fn cpu_place_ship(&self, length: u8) -> Vec<[u8; 2]> {
-        // RNG a position and direction, then make sure it's valid.
-        loop {
-            let pos = self.rng_pos();
-            let direction = Direction::random();
-
-            if let Some(s) = self.get_ship_position(pos, direction, length) {
-                if self.valid_ship_position(&s) {
-                    break s;
-                }
-            }
-        }
     }
 
     /// Returns a ship position, given its head position, direction and length.

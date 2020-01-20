@@ -1,7 +1,7 @@
 use crate::direction::Direction;
 use crate::player::Player;
 use crate::settings::GameSettings;
-use rand::{seq::SliceRandom, thread_rng};
+use rand::{seq::SliceRandom, thread_rng, Rng};
 
 pub struct Game {
     settings: GameSettings,
@@ -20,9 +20,24 @@ impl Game {
 
         for player in &mut players {
             if !player.is_cpu() {
-                player.add_placement_ship([0, 0], Direction::West, settings.ships[0]);
+                player.add_ship([0, 0], Direction::West, settings.ships[0], true);
             } else {
-                player.cpu_place_ships();
+                let mut rng = thread_rng();
+                let mut i = 0;
+
+                while i < settings.ships.len() {
+                    let pos = [
+                        rng.gen_range(0, grid_size[0]),
+                        rng.gen_range(0, grid_size[1]),
+                    ];
+
+                    if player
+                        .add_ship(pos, Direction::random(), settings.ships[i], false)
+                        .is_ok()
+                    {
+                        i += 1;
+                    }
+                }
             }
         }
 
@@ -141,7 +156,12 @@ impl Game {
 
             // If the player hasn't placed all their ships, add a new one.
             if ship_count < self.settings.ships.len() {
-                player.add_placement_ship([0, 0], Direction::West, self.settings.ships[ship_count]);
+                player.add_ship(
+                    [0, 0],
+                    Direction::West,
+                    self.settings.ships[ship_count],
+                    true,
+                )?;
             }
 
             Ok(())
