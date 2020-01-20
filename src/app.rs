@@ -45,7 +45,7 @@ impl<'a> App<'a> {
             window: window,
             window_size: window_size,
             settings: &settings,
-            game: Game::new(game_settings),
+            game: Game::new(game_settings).unwrap(),
             turn_active: true,
             turn_end_timer: 0.0,
             cpu_turn_timer: 0.0,

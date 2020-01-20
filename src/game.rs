@@ -11,7 +11,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(settings: GameSettings) -> Game {
+    pub fn new(settings: GameSettings) -> Result<Game, &'static str> {
         let grid_size = [settings.spaces[0], settings.spaces[1]];
         let mut players = [
             Player::new(grid_size, settings.ships.len(), false),
@@ -20,7 +20,7 @@ impl Game {
 
         for player in &mut players {
             if !player.is_cpu() {
-                player.add_ship([0, 0], Direction::West, settings.ships[0], true);
+                player.add_ship([0, 0], Direction::West, settings.ships[0], true)?;
             } else {
                 let mut rng = thread_rng();
                 let mut i = 0;
@@ -41,12 +41,12 @@ impl Game {
             }
         }
 
-        Game {
+        Ok(Game {
             settings: settings,
             players: players,
             state: GameState::Placement,
             turn: 0,
-        }
+        })
     }
 
     pub fn settings(&self) -> &GameSettings {
