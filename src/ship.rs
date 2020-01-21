@@ -45,14 +45,14 @@ impl Ship {
 
                 if x_diff + y_diff != 1 {
                     valid = false;
+                    break;
                 }
 
-                if valid {
-                    let next_dir = Direction::from_positions(&pos[i + 1], &pos[i])?;
+                let next_dir = Direction::from_positions(&pos[i + 1], &pos[i])?;
 
-                    if next_dir != dir {
-                        valid = false;
-                    }
+                if next_dir != dir {
+                    valid = false;
+                    break;
                 }
             }
 
