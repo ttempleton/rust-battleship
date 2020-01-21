@@ -29,12 +29,44 @@ impl Ship {
     ///
     /// Returns an error if `pos` does not form a vertical or horizontal line.
     pub fn set_pos(&mut self, pos: Vec<[u8; 2]>) -> Result<(), &'static str> {
-        let dir = Direction::from_positions(&pos[1], &pos[0])?;
+        if pos.is_empty() {
+            Err("tried to set an empty position to a ship")
+        } else if pos.len() == 1 {
+            self.position = pos;
 
-        self.position = pos;
-        self.dir = dir;
+            Ok(())
+        } else {
+            let mut valid = true;
+            let dir = Direction::from_positions(&pos[1], &pos[0])?;
 
-        Ok(())
+            for i in 0..pos.len() - 1 {
+                let x_diff = (pos[i][0] as i16 - pos[i + 1][0] as i16).abs() as u8;
+                let y_diff = (pos[i][1] as i16 - pos[i + 1][1] as i16).abs() as u8;
+
+                if x_diff + y_diff != 1 {
+                    valid = false;
+                }
+
+                if valid {
+                    let next_dir = Direction::from_positions(&pos[i + 1], &pos[i])?;
+
+                    if next_dir != dir {
+                        valid = false;
+                    }
+                }
+            }
+
+            if !valid {
+                Err("ship position does not form a continuous line")
+            } else {
+                let dir = Direction::from_positions(&pos[1], &pos[0])?;
+
+                self.position = pos;
+                self.dir = dir;
+
+                Ok(())
+            }
+        }
     }
 
     /// Returns the ship's direction.
