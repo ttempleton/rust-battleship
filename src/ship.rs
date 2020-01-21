@@ -99,3 +99,105 @@ enum ShipState {
     Active,
     Sunk,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pos() {
+        let pos = vec![[0, 0], [0, 1]];
+        let ship = Ship::new(pos.clone());
+        assert_eq!(ship.pos(), pos.as_slice());
+    }
+
+    #[test]
+    fn set_pos() {
+        let mut ship = Ship::new(vec![[0, 0], [0, 1]]);
+        assert!(ship.set_pos(vec![[1, 0], [0, 0]]).is_ok());
+        assert_eq!(ship.dir(), Direction::East);
+
+        assert!(ship.set_pos(vec![[0, 1], [0, 0]]).is_ok());
+        assert_eq!(ship.dir(), Direction::South);
+
+        assert!(ship.set_pos(vec![[0, 0], [1, 0]]).is_ok());
+        assert_eq!(ship.dir(), Direction::West);
+
+        assert!(ship.set_pos(vec![[0, 0], [0, 1]]).is_ok());
+        assert_eq!(ship.dir(), Direction::North);
+
+        assert!(ship.set_pos(vec![[0, 0], [0, 0]]).is_err());
+        assert!(ship.set_pos(vec![[0, 0], [0, 2]]).is_err());
+        assert!(ship.set_pos(vec![]).is_err());
+    }
+
+    #[test]
+    fn dir() {
+        let mut ship = Ship::new(vec![[0, 0], [0, 1]]);
+        assert_eq!(ship.dir(), Direction::North);
+
+        ship = Ship::new(vec![[0, 1], [0, 0]]);
+        assert_eq!(ship.dir(), Direction::South);
+
+        ship = Ship::new(vec![[0, 0], [1, 0]]);
+        assert_eq!(ship.dir(), Direction::West);
+
+        ship = Ship::new(vec![[1, 0], [0, 0]]);
+        assert_eq!(ship.dir(), Direction::East);
+    }
+
+    #[test]
+    fn len() {
+        let pos = vec![[0, 0], [0, 1]];
+        let ship = Ship::new(pos.clone());
+        assert_eq!(ship.len(), pos.len());
+    }
+
+    #[test]
+    fn is_placement() {
+        let mut ship = Ship::new(vec![[0, 0], [0, 1]]);
+        assert!(ship.is_placement());
+        assert!(ship.set_active().is_ok());
+        assert!(!ship.is_placement());
+        assert!(ship.set_sunk().is_ok());
+        assert!(!ship.is_placement());
+    }
+
+    #[test]
+    fn is_active() {
+        let mut ship = Ship::new(vec![[0, 0], [0, 1]]);
+        assert!(!ship.is_active());
+        assert!(ship.set_active().is_ok());
+        assert!(ship.is_active());
+        assert!(ship.set_sunk().is_ok());
+        assert!(!ship.is_active());
+    }
+
+    #[test]
+    fn set_active() {
+        let mut ship = Ship::new(vec![[0, 0], [0, 1]]);
+        assert!(ship.set_active().is_ok());
+        assert!(ship.set_active().is_err());
+        assert!(ship.set_sunk().is_ok());
+        assert!(ship.set_active().is_err());
+    }
+
+    #[test]
+    fn is_sunk() {
+        let mut ship = Ship::new(vec![[0, 0], [0, 1]]);
+        assert!(!ship.is_sunk());
+        assert!(ship.set_active().is_ok());
+        assert!(!ship.is_sunk());
+        assert!(ship.set_sunk().is_ok());
+        assert!(ship.is_sunk());
+    }
+
+    #[test]
+    fn set_sunk() {
+        let mut ship = Ship::new(vec![[0, 0], [0, 1]]);
+        assert!(ship.set_sunk().is_err());
+        assert!(ship.set_active().is_ok());
+        assert!(ship.set_sunk().is_ok());
+        assert!(ship.set_sunk().is_err());
+    }
+}
