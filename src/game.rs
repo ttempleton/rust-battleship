@@ -63,11 +63,6 @@ impl Game {
         &self.players[self.not_turn()]
     }
 
-    /// Returns a mutable reference to the currently active player.
-    pub fn active_player_mut(&mut self) -> &mut Player {
-        &mut self.players[self.turn as usize]
-    }
-
     /// Returns whether the game's current state is ship placement.
     pub fn is_state_placement(&self) -> bool {
         self.state == GameState::Placement
@@ -249,6 +244,24 @@ impl Game {
         positions.shuffle(&mut rng);
 
         positions[0]
+    }
+
+    /// Moves the active player's grid cursor in the given `direction`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if moving the grid cursor in `direction` would move it out of bounds.
+    pub fn move_grid_cursor(&mut self, direction: Direction) -> Result<(), &'static str> {
+        self.players[self.turn as usize].move_grid_cursor(direction)
+    }
+
+    /// Sets the active player's grid cursor position.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no space exists at `pos`.
+    pub fn set_grid_cursor(&mut self, pos: &[u8; 2]) -> Result<(), &'static str> {
+        self.players[self.turn as usize].set_grid_cursor(pos)
     }
 }
 

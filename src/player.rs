@@ -408,16 +408,34 @@ impl Player {
         &self.grid_cursor
     }
 
-    /// Moves the player's grid cursor in the given `direction` if possible.
-    pub fn move_grid_cursor(&mut self, direction: Direction) {
+    /// Moves the player's grid cursor in the given `direction`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if moving the grid cursor in `direction` would move it out of bounds.
+    pub fn move_grid_cursor(&mut self, direction: Direction) -> Result<(), &'static str> {
         if let Some(new_cursor) = self.movement(&self.grid_cursor, direction) {
-            self.set_grid_cursor(&new_cursor);
+            self.set_grid_cursor(&new_cursor)?;
+
+            Ok(())
+        } else {
+            Err("tried to move grid cursor out of bounds")
         }
     }
 
-    /// Sets the player's grid cursor coordinates.
-    pub fn set_grid_cursor(&mut self, new_cursor: &[u8; 2]) {
-        self.grid_cursor = *new_cursor;
+    /// Sets the player's grid cursor position.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no space exists at `pos`.
+    pub fn set_grid_cursor(&mut self, pos: &[u8; 2]) -> Result<(), &'static str> {
+        if self.space_index(pos) < self.spaces.len() {
+            self.grid_cursor = *pos;
+
+            Ok(())
+        } else {
+            Err("tried to set the grid cursor to a nonexistent space")
+        }
     }
 
     pub fn is_cpu(&self) -> bool {

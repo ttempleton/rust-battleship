@@ -351,8 +351,11 @@ impl<'a> App<'a> {
             // TODO: more specific error checking.
         }
 
-        if self.game.is_player_selecting_space() && self.turn_active {
-            self.game.active_player_mut().move_grid_cursor(direction);
+        if self.game.is_player_selecting_space()
+            && self.turn_active
+            && self.game.move_grid_cursor(direction).is_err()
+        {
+            // TODO: might be good to have some visual effect.
         }
     }
 
@@ -377,12 +380,11 @@ impl<'a> App<'a> {
                         .set_placement_ship(ship)
                         .expect("tried to set placement ship to invalid position");
                 }
-            } else if self.game.is_state_active() {
-                let ref mut player = self.game.active_player_mut();
-
-                if !player.is_cpu() {
-                    player.set_grid_cursor(&grid_pos);
-                }
+            } else if self.game.is_state_active()
+                && !self.game.active_player().is_cpu()
+                && self.game.set_grid_cursor(&grid_pos).is_err()
+            {
+                // TODO: might be good to have some visual effect.
             }
         }
     }
