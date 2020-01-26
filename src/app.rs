@@ -6,7 +6,6 @@ use std::{env::current_exe, path::PathBuf};
 
 pub struct App<'a> {
     window: PistonWindow,
-    window_size: [u32; 2],
     settings: &'a AppSettings,
     game: Game,
     turn_active: bool,
@@ -40,7 +39,6 @@ impl<'a> App<'a> {
 
         App {
             window: window,
-            window_size: window_size,
             settings: &settings,
             game: Game::new(game_settings).unwrap(),
             turn_active: true,
@@ -120,7 +118,7 @@ impl<'a> App<'a> {
 
                 let space_size_u32 = self.settings.space_size as u32;
                 let grid_area = self.grid_area;
-                let window_size = self.window_size;
+                let window_size = self.window.size();
                 let turn_end_timer = self.turn_end_timer;
                 let game_winner = self.game.get_winner();
                 let game_turn = self.game.turn();
@@ -197,7 +195,7 @@ impl<'a> App<'a> {
                         let player_text_size = player_text[turn].get_size();
                         let transform = c
                             .transform
-                            .trans(((window_size[0] - player_text_size.0) / 2) as f64, 2.0);
+                            .trans((window_size.width - player_text_size.0 as f64) / 2.0, 2.0);
                         image(&player_text[turn], transform, g);
                     }
 
@@ -210,7 +208,7 @@ impl<'a> App<'a> {
                         };
                         rectangle(
                             [0.0, 0.0, 0.0, alpha],
-                            [0.0, 0.0, window_size[0] as f64, window_size[1] as f64],
+                            [0.0, 0.0, window_size.width, window_size.height],
                             c.transform,
                             g,
                         );
@@ -225,14 +223,13 @@ impl<'a> App<'a> {
                         image(
                             &game_over_text[0],
                             c.transform
-                                .trans(((window_size[0] - game_over_text_size.0) / 2) as f64, 2.0),
+                                .trans((window_size.width - game_over_text_size.0 as f64) / 2.0, 2.0),
                             g,
                         );
                         image(
                             &player_text[winner],
                             c.transform.trans(
-                                ((window_size[0] - player_text_size.0 - wins_text_size.0 - 2) / 2)
-                                    as f64,
+                                (window_size.width - (player_text_size.0 - wins_text_size.0 - 2) as f64) / 2.0,
                                 22.0,
                             ),
                             g,
@@ -240,8 +237,7 @@ impl<'a> App<'a> {
                         image(
                             &game_over_text[1],
                             c.transform.trans(
-                                ((window_size[0] + player_text_size.0 - wins_text_size.0 + 2) / 2)
-                                    as f64,
+                                (window_size.width + (player_text_size.0 - wins_text_size.0 + 2) as f64) / 2.0,
                                 22.0,
                             ),
                             g,
