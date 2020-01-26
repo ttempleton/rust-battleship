@@ -18,10 +18,7 @@ pub struct App<'a> {
 
 impl<'a> App<'a> {
     pub fn new(settings: &AppSettings) -> App {
-        let game_settings = GameSettings {
-            spaces: [10, 10],
-            ships: vec![2, 3, 4, 5],
-        };
+        let game_settings = GameSettings::defaults();
         let grid_area = [
             settings.space_size,
             settings.space_size * 3,
