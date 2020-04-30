@@ -8,14 +8,14 @@ pub struct Ship {
 
 impl Ship {
     /// Creates a new `Ship` with the given position.
-    pub fn new(pos: Vec<[u8; 2]>) -> Ship {
-        let dir = Direction::from_positions(&pos[1], &pos[0]).unwrap();
+    pub fn new(pos: Vec<[u8; 2]>) -> Result<Ship, &'static str> {
+        let dir = Direction::from_positions(&pos[1], &pos[0])?;
 
-        Ship {
+        Ok(Ship {
             state: ShipState::Placement,
             position: pos,
             dir: dir,
-        }
+        })
     }
 
     /// Returns the ship's position.

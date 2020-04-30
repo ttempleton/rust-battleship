@@ -142,7 +142,7 @@ impl Player {
             if !placement && !self.valid_ship_position(&pos) {
                 Err("tried to place a ship in an invalid position")
             } else {
-                let mut ship = Ship::new(pos);
+                let mut ship = Ship::new(pos)?;
 
                 if !placement {
                     ship.set_active()?;
