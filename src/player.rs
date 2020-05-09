@@ -11,19 +11,9 @@ pub struct Player {
 
 impl Player {
     pub fn new(grid_size: [u8; 2], ship_count: usize, is_cpu: bool) -> Player {
-        let spaces_x = grid_size[0] as usize;
-        let spaces_y = grid_size[1] as usize;
-        let mut spaces = Vec::with_capacity(spaces_x * spaces_y);
-
-        for col in 0..grid_size[0] {
-            for row in 0..grid_size[1] {
-                spaces.push(Space::new([col, row]));
-            }
-        }
-
         Player {
             is_cpu: is_cpu,
-            spaces: spaces,
+            spaces: Space::all_grid_spaces(&grid_size),
             ships: Vec::with_capacity(ship_count),
             grid_size: grid_size,
             grid_cursor: [0, 0],

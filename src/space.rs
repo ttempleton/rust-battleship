@@ -11,6 +11,20 @@ impl Space {
         }
     }
 
+    pub fn all_grid_spaces(grid_size: &[u8; 2]) -> Vec<Space> {
+        let x = grid_size[0] as usize;
+        let y = grid_size[1] as usize;
+        let mut spaces = Vec::with_capacity(x * y);
+
+        for col in 0..grid_size[0] {
+            for row in 0..grid_size[1] {
+                spaces.push(Space::new([col, row]));
+            }
+        }
+
+        spaces
+    }
+
     /// Sets this space as having been checked, and whether it was hit.
     ///
     /// # Errors
