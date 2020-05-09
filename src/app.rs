@@ -229,7 +229,7 @@ impl<'a> App<'a> {
                         image(
                             &player_text[winner],
                             c.transform.trans(
-                                (window_size.width - (player_text_size.0 - wins_text_size.0 - 2) as f64) / 2.0,
+                                (window_size.width - (player_text_size.0 + wins_text_size.0 + 2) as f64) / 2.0,
                                 22.0,
                             ),
                             g,
