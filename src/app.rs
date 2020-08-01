@@ -124,7 +124,7 @@ impl<'a> App<'a> {
                 let game_turn = self.game.turn();
                 let turn_active = self.turn_active;
 
-                self.window.draw_2d(&e, |c, g| {
+                self.window.draw_2d(&e, |c, g, _| {
                     clear([0.6, 0.6, 1.0, 1.0], g);
 
                     // Ship icons above grid
@@ -406,7 +406,7 @@ impl<'a> App<'a> {
     /// Returns the texture from the file at the given path.
     fn get_texture(&mut self, path: PathBuf) -> G2dTexture {
         Texture::from_path(
-            &mut self.window.factory,
+            &mut self.window.create_texture_context(),
             path,
             Flip::None,
             &TextureSettings::new(),
