@@ -286,8 +286,7 @@ impl Player {
 
     /// Returns whether there is a ship next to the specified grid coordinates.
     fn ship_is_next_to(&self, pos: &[u8; 2]) -> bool {
-        let x = pos[0];
-        let y = pos[1];
+        let &[x, y] = pos;
 
         // Left
         x > 0 && self.ship_is_in_space(&[x - 1, y])
