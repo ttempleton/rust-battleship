@@ -289,21 +289,14 @@ impl Player {
         let x = pos[0];
         let y = pos[1];
 
-        if x > 0 {
-            // Left
-            self.ship_is_in_space(&[x - 1, y])
-        } else if x < self.grid_size[0] - 1 {
+        // Left
+        x > 0 && self.ship_is_in_space(&[x - 1, y])
             // Right
-            self.ship_is_in_space(&[x + 1, y])
-        } else if y > 0 {
+            || x < self.grid_size[0] - 1 && self.ship_is_in_space(&[x + 1, y])
             // Above
-            self.ship_is_in_space(&[x, y - 1])
-        } else if y < self.grid_size[1] - 1 {
+            || y > 0 && self.ship_is_in_space(&[x, y - 1])
             // Below
-            self.ship_is_in_space(&[x, y + 1])
-        } else {
-            false
-        }
+            || y < self.grid_size[1] - 1 && self.ship_is_in_space(&[x, y + 1])
     }
 
     /// Gets a reference to the spaces.
