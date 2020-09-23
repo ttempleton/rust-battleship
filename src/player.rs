@@ -286,31 +286,24 @@ impl Player {
 
     /// Returns whether there is a ship next to the specified grid coordinates.
     fn ship_is_next_to(&self, pos: &[u8; 2]) -> bool {
-        let mut result = false;
         let x = pos[0];
         let y = pos[1];
 
-        // Left
         if x > 0 {
-            result = self.ship_is_in_space(&[x - 1, y]);
+            // Left
+            self.ship_is_in_space(&[x - 1, y])
+        } else if x < self.grid_size[0] - 1 {
+            // Right
+            self.ship_is_in_space(&[x + 1, y])
+        } else if y > 0 {
+            // Above
+            self.ship_is_in_space(&[x, y - 1])
+        } else if y < self.grid_size[1] - 1 {
+            // Below
+            self.ship_is_in_space(&[x, y + 1])
+        } else {
+            false
         }
-
-        // Right
-        if x < self.grid_size[0] - 1 && !result {
-            result = self.ship_is_in_space(&[x + 1, y]);
-        }
-
-        // Above
-        if y > 0 && !result {
-            result = self.ship_is_in_space(&[x, y - 1]);
-        }
-
-        // Below
-        if y < self.grid_size[1] - 1 && !result {
-            result = self.ship_is_in_space(&[x, y + 1]);
-        }
-
-        result
     }
 
     /// Gets a reference to the spaces.
