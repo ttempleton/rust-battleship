@@ -27,8 +27,8 @@ impl Game {
 
                 while i < settings.ships.len() {
                     let pos = [
-                        rng.gen_range(0, grid_size[0]),
-                        rng.gen_range(0, grid_size[1]),
+                        rng.gen_range(0..grid_size[0]),
+                        rng.gen_range(0..grid_size[1]),
                     ];
 
                     if player

@@ -5,5 +5,5 @@ authors = ["Thomas Templeton <thomas.templeton.dev@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-piston_window = "0.112.0"
-rand = "^0.7.2"
+piston_window = "0.123.0"
+rand = "^0.8.5"

@@ -37,7 +37,7 @@ impl Direction {
     }
 
     pub fn random() -> Direction {
-        match thread_rng().gen_range(0, 4) {
+        match thread_rng().gen_range(0..4) {
             0 => Direction::North,
             1 => Direction::East,
             2 => Direction::South,
